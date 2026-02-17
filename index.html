@@ -140,6 +140,14 @@
                         </div>
                     </div>
 
+                    <div class="form-group">
+                        <label>Contact Number</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-phone field-icon"></i>
+                            <input type="tel" id="contactNumber" class="step1-field" placeholder="09XXXXXXXXX" required>
+                        </div>
+                    </div>
+
                     <div class="name-row">
                         <div class="form-group" style="flex: 1;">
                             <label>Position</label>
@@ -230,7 +238,6 @@
             el.classList.toggle('fa-eye-slash');
         }
 
-        // REGISTRATION LOGIC WITH ROLE SELECTION
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const p1 = document.getElementById('regPassword').value;
@@ -253,8 +260,9 @@
                         first_name: document.getElementById('fname').value,
                         middle_initial: document.getElementById('mi').value,
                         last_name: document.getElementById('lname').value,
+                        contact_number: document.getElementById('contactNumber').value, // DATA SENT TO SUPABASE
                         position: document.getElementById('position').value,
-                        role: document.getElementById('regRole').value // SAVING THE ROLE HERE
+                        role: document.getElementById('regRole').value 
                     }
                 }
             });
@@ -269,7 +277,6 @@
             }
         });
 
-        // LOGIN LOGIC
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const { error } = await _supabase.auth.signInWithPassword({
