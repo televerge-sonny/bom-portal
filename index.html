@@ -19,9 +19,10 @@
             --error-red: #ef4444;
         }
 
+        /* Initially hide body to check if user is already logged in */
         body {
             margin: 0; padding: 0; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
+            display: none; justify-content: center; align-items: center;
             background: var(--bg-gradient); font-family: 'Inter', sans-serif;
         }
 
@@ -217,6 +218,19 @@
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+        // --- AUTH CHECK: If already logged in, skip login screen ---
+        async function checkSession() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (user) {
+                // User is already logged in, send them to dashboard
+                window.location.replace('dashboard.html');
+            } else {
+                // No user, show the login form
+                document.body.style.display = 'flex';
+            }
+        }
+        checkSession();
+
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { 
             document.getElementById(id).style.display = 'none';
@@ -245,7 +259,7 @@
             el.classList.toggle('fa-eye-slash');
         }
 
-        // LOGIN LOGIC (Email based)
+        // LOGIN LOGIC
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
@@ -265,7 +279,8 @@
                 btn.disabled = false;
                 btn.innerText = 'Sign In';
             } else {
-                window.location.href = 'dashboard.html'; 
+                // Use replace to keep the URL history clean
+                window.location.replace('dashboard.html'); 
             }
         });
 

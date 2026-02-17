@@ -20,6 +20,7 @@
             --white: #ffffff;
         }
 
+        /* Hide body initially to prevent unauthorized flash */
         body {
             display: none; 
             margin: 0; padding: 0; min-height: 100vh;
@@ -115,12 +116,13 @@
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+        // 1. Check user status on load
         async function checkUser() {
             const { data: { user }, error } = await _supabase.auth.getUser();
 
             if (error || !user) {
-                // Pointing to './' tells the browser to go to the folder root
-                window.location.href = './'; 
+                // If not logged in, replace current URL with root (index)
+                window.location.replace('./'); 
             } else {
                 document.body.style.display = 'block';
                 const firstName = user.user_metadata.first_name || 'User';
@@ -132,16 +134,18 @@
             }
         }
 
+        // 2. Handle Logout
         async function handleLogout() {
             const { error } = await _supabase.auth.signOut();
             if (error) {
                 alert("Error logging out: " + error.message);
             } else {
-                // Pointing to './' cleans up the URL to your default GitHub page
-                window.location.href = './';
+                // replace('./') removes the current page from history and goes to root
+                window.location.replace('./');
             }
         }
 
+        // 3. Simple Tab Switching
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
             tabcontent = document.getElementsByClassName("tab-content");
