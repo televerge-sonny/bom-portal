@@ -19,7 +19,6 @@
             --error-red: #ef4444;
         }
 
-        /* Initially hide body to check if user is already logged in */
         body {
             margin: 0; padding: 0; height: 100vh;
             display: none; justify-content: center; align-items: center;
@@ -49,9 +48,6 @@
         }
 
         input:focus, select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-        input.invalid { border-color: var(--error-red) !important; }
-
-        .error-message { color: var(--error-red); font-size: 11px; margin-top: 4px; display: none; font-weight: 500; }
 
         .login-btn, .submit-btn, .next-btn, .close-btn {
             width: 100%; padding: 12px; background-color: var(--primary-color);
@@ -62,9 +58,6 @@
         .login-btn:hover, .submit-btn:hover, .next-btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
         
         .back-link { display: block; margin-top: 15px; font-size: 13px; color: var(--text-muted); cursor: pointer; text-decoration: underline; text-align: center; }
-
-        .options-row { display: flex; justify-content: flex-end; margin-bottom: 25px; font-size: 13px; }
-        .forgot-password { color: var(--primary-color); text-decoration: none; font-weight: 600; cursor: pointer; }
 
         .signup-link { margin-top: 25px; font-size: 14px; color: var(--text-muted); }
         .signup-link a { color: var(--primary-color); text-decoration: none; font-weight: 600; cursor: pointer; }
@@ -89,7 +82,6 @@
         .col-3 { flex: 1.5; } .col-1 { flex: 0.6; }
         
         .close-modal-icon { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
-        .admin-icon { font-size: 40px; color: var(--primary-color); margin-bottom: 15px; text-align: center;}
     </style>
 </head>
 <body>
@@ -111,25 +103,10 @@
                     <input type="password" id="loginPassword" placeholder="••••••••" required>
                 </div>
             </div>
-            <div class="options-row">
-                <a class="forgot-password" onclick="openModal('forgotModal')">Forgot password?</a>
-            </div>
             <button type="submit" id="loginBtn" class="login-btn">Sign In</button>
         </form>
         <div class="signup-link">
             Don't have an account? <a onclick="openModal('signupModal')">Create one</a>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="forgotModal">
-        <div class="modal-content" style="text-align: center;">
-            <button class="close-modal-icon" onclick="closeModal('forgotModal')">&times;</button>
-            <div class="admin-icon"><i class="fas fa-user-shield"></i></div>
-            <h3>Password Assistance</h3>
-            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
-                For security compliance, password resets are handled manually. Please contact your <strong>System Administrator</strong> to verify your identity and reset your credentials.
-            </p>
-            <button class="close-btn" onclick="closeModal('forgotModal')">Understood</button>
         </div>
     </div>
 
@@ -163,24 +140,29 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Contact Number</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-phone field-icon"></i>
-                            <input type="tel" id="contact" class="step1-field" placeholder="09xxxxxxxxx" required>
+                    <div class="name-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Position</label>
+                            <select id="position" class="step1-field" required>
+                                <option value="">Select Position</option>
+                                <option value="Technical Engineer">Technical Engineer</option>
+                                <option value="Technical Supervisor">Technical Supervisor</option>
+                                <option value="Technical Head">Technical Head</option>
+                                <option value="Project Manager">Project Manager</option>
+                                <option value="Admin">Admin</option>
+                            </select>
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Position</label>
-                        <select id="position" class="step1-field" required>
-                            <option value="">Select Position</option>
-                            <option value="Technical Engineer">Technical Engineer</option>
-                            <option value="Technical Supervisor">Technical Supervisor</option>
-                            <option value="Technical Head">Technical Head</option>
-                            <option value="Project Manager">Project Manager</option>
-                            <option value="Admin">Admin</option>
-                        </select>
+                        <div class="form-group" style="flex: 1;">
+                            <label>System Role</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user-tag field-icon"></i>
+                                <select id="regRole" class="step1-field" required>
+                                    <option value="read-only">read-only</option>
+                                    <option value="superuser">super user</option>
+                                    <option value="admin">admin</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <button type="button" class="next-btn" onclick="goToStep(2)">Continue to Account <i class="fas fa-arrow-right"></i></button>
@@ -203,7 +185,6 @@
                             <input type="password" id="confirmPassword" required>
                             <i class="fas fa-eye toggle-password" onclick="togglePass('confirmPassword', this)"></i>
                         </div>
-                        <span id="matchError" class="error-message">Passwords do not match.</span>
                     </div>
 
                     <button type="submit" id="regBtn" class="submit-btn">Complete Registration</button>
@@ -218,24 +199,15 @@
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- AUTH CHECK: If already logged in, skip login screen ---
         async function checkSession() {
             const { data: { user } } = await _supabase.auth.getUser();
-            if (user) {
-                // User is already logged in, send them to dashboard
-                window.location.replace('dashboard.html');
-            } else {
-                // No user, show the login form
-                document.body.style.display = 'flex';
-            }
+            if (user) window.location.replace('dashboard.html');
+            else document.body.style.display = 'flex';
         }
         checkSession();
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { 
-            document.getElementById(id).style.display = 'none';
-            if(id === 'signupModal') setTimeout(() => goToStep(1), 300);
-        }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function goToStep(step) {
             if (step === 2) {
@@ -243,7 +215,6 @@
                 let valid = true;
                 fields.forEach(f => { if(!f.checkValidity()) { f.reportValidity(); valid = false; } });
                 if(!valid) return;
-
                 document.getElementById('step1').classList.remove('active');
                 document.getElementById('step2').classList.add('active');
             } else {
@@ -259,80 +230,56 @@
             el.classList.toggle('fa-eye-slash');
         }
 
-        // LOGIN LOGIC
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const btn = document.getElementById('loginBtn');
-
-            btn.disabled = true;
-            btn.innerText = 'Authenticating...';
-
-            const { data, error } = await _supabase.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-
-            if (error) {
-                alert('Login Failed: ' + error.message);
-                btn.disabled = false;
-                btn.innerText = 'Sign In';
-            } else {
-                // Use replace to keep the URL history clean
-                window.location.replace('dashboard.html'); 
-            }
-        });
-
-        // REGISTRATION LOGIC
+        // REGISTRATION LOGIC WITH ROLE SELECTION
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const p1 = document.getElementById('regPassword').value;
             const p2 = document.getElementById('confirmPassword').value;
-            const email = document.getElementById('newEmail').value;
-            const errorSpan = document.getElementById('matchError');
-
+            
             if (p1 !== p2) {
-                errorSpan.style.display = 'block';
+                alert("Passwords do not match!");
                 return;
             }
 
             const btn = document.getElementById('regBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             btn.disabled = true;
+            btn.innerText = 'Processing...';
 
             const { data, error } = await _supabase.auth.signUp({
-                email: email,
+                email: document.getElementById('newEmail').value,
                 password: p1,
                 options: {
                     data: {
                         first_name: document.getElementById('fname').value,
                         middle_initial: document.getElementById('mi').value,
                         last_name: document.getElementById('lname').value,
-                        contact: document.getElementById('contact').value,
-                        position: document.getElementById('position').value
+                        position: document.getElementById('position').value,
+                        role: document.getElementById('regRole').value // SAVING THE ROLE HERE
                     }
                 }
             });
 
             if (error) {
-                alert('Registration Error: ' + error.message);
-                btn.innerText = 'Complete Registration';
+                alert('Error: ' + error.message);
                 btn.disabled = false;
+                btn.innerText = 'Complete Registration';
             } else {
-                alert('Registration successful! Please check your email for a confirmation link.');
+                alert('Registration successful! Please check your email.');
                 closeModal('signupModal');
-                this.reset();
-                btn.innerText = 'Complete Registration';
-                btn.disabled = false;
             }
         });
 
-        window.onclick = function(event) {
-            if (event.target.className === 'modal-overlay') {
-                closeModal(event.target.id);
-            }
-        }
+        // LOGIN LOGIC
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const { error } = await _supabase.auth.signInWithPassword({
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            });
+
+            if (error) alert('Login Failed: ' + error.message);
+            else window.location.replace('dashboard.html');
+        });
     </script>
 </body>
 </html>
