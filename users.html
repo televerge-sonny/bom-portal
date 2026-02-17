@@ -85,7 +85,7 @@
         .btn-edit { background: #f3f6f6; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter'; font-weight: 600; transition: 0.3s; color: var(--text-main); }
         .btn-edit:hover { background: var(--primary-color); color: white; }
         
-        /* Updated Red Delete Button */
+        /* Red Delete Button */
         .btn-delete { background: var(--error-red); border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter'; font-weight: 600; transition: 0.3s; }
         .btn-delete:hover { background: var(--error-hover); }
 
@@ -115,7 +115,7 @@
         <div class="nav-logo">BOM PORTAL</div>
         <div class="nav-tabs">
             <a href="dashboard.html" class="tab-link">STATUS</a>
-            <a href="dashboard.html" class="tab-link">BOM</a>
+            <a href="bom.html" class="tab-link">BOM</a>
             <a href="users.html" class="tab-link active">USERS</a>
         </div>
         <div class="user-profile">
@@ -247,6 +247,12 @@
                     <input type="tel" id="editContact" required>
                 </div>
 
+                <div class="form-group" style="border-top: 1px solid #f3f4f6; padding-top: 15px; margin-top: 10px;">
+                    <label style="color: var(--error-red);">Reset Password (Optional)</label>
+                    <input type="password" id="editPassword" placeholder="Leave blank to keep current password" minlength="8">
+                    <small style="font-size: 10px; color: var(--text-muted);">Enter a new password if the user requested a reset.</small>
+                </div>
+
                 <div class="name-row">
                     <div class="form-group" style="flex: 1;">
                         <label>Position</label>
@@ -277,10 +283,21 @@
     <script>
         const supabaseUrl = 'https://ontnxseisucgdofovrre.supabase.co';
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
+        
+        // IMPORTANT: For auth.admin functions, you need the service_role key. 
+        // DO NOT use this in a public production environment. Use Edge Functions instead.
+        const serviceRoleKey = 'YOUR_SERVICE_ROLE_KEY_HERE'; 
+
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Admin client specifically for password resets (requires service role key)
+        const _supabaseAdmin = supabase.createClient(supabaseUrl, serviceRoleKey);
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function closeModal(id) { 
+            document.getElementById(id).style.display = 'none'; 
+            if(id === 'editModal') document.getElementById('editPassword').value = ""; // Reset password field
+        }
         
         function goToStep(step) {
             if (step === 2) {
@@ -353,7 +370,6 @@
             }
         }
 
-        // Handle Edit Profile
         function openEditModal(user) {
             document.getElementById('editUserId').value = user.id;
             document.getElementById('editFname').value = user.first_name || '';
@@ -362,16 +378,21 @@
             document.getElementById('editContact').value = user.contact_number || '';
             document.getElementById('editPosition').value = user.position || '';
             document.getElementById('editRole').value = user.role || 'read-only';
+            document.getElementById('editPassword').value = ""; // Clear password field on open
             openModal('editModal');
         }
 
+        // UPDATED EDIT SUBMIT LOGIC
         document.getElementById('editForm').onsubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('editUserId').value;
+            const newPassword = document.getElementById('editPassword').value;
             const btn = document.getElementById('updateBtn');
+            
             btn.disabled = true;
             btn.innerText = 'Updating...';
 
+            // 1. Update Profile Information
             const updates = {
                 first_name: document.getElementById('editFname').value,
                 middle_initial: document.getElementById('editMi').value,
@@ -381,19 +402,45 @@
                 role: document.getElementById('editRole').value
             };
             
-            const { error } = await _supabase.from('profiles').update(updates).eq('id', id);
+            const { error: profileError } = await _supabase.from('profiles').update(updates).eq('id', id);
             
-            if (error) {
-                alert("Update failed: " + error.message);
-            } else {
-                closeModal('editModal');
-                loadUsers();
+            if (profileError) {
+                alert("Profile update failed: " + profileError.message);
+                btn.disabled = false;
+                btn.innerText = 'Save Changes';
+                return;
             }
+
+            // 2. Update Password if provided
+            if (newPassword.trim().length > 0) {
+                if (newPassword.length < 8) {
+                    alert("Password must be at least 8 characters.");
+                    btn.disabled = false;
+                    btn.innerText = 'Save Changes';
+                    return;
+                }
+
+                // This requires the service_role key to work
+                const { error: authError } = await _supabaseAdmin.auth.admin.updateUserById(
+                    id, 
+                    { password: newPassword }
+                );
+
+                if (authError) {
+                    alert("Profile updated, but Password reset failed: " + authError.message);
+                } else {
+                    alert("Profile and Password updated successfully!");
+                }
+            } else {
+                alert("Profile updated successfully!");
+            }
+
+            closeModal('editModal');
+            loadUsers();
             btn.disabled = false;
             btn.innerText = 'Save Changes';
         };
 
-        // Handle Registration
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const p1 = document.getElementById('regPassword').value;

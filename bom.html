@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOM Portal | Dashboard</title>
+    <title>BOM Portal | Bill of Materials</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -59,12 +59,10 @@
         .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
 
         .tab-content {
-            display: none; background: var(--white); padding: 60px 40px;
+            background: var(--white); padding: 60px 40px;
             border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
             text-align: center; animation: fadeIn 0.4s ease;
         }
-
-        .tab-content.active { display: block; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -77,13 +75,11 @@
 
     <nav>
         <div class="nav-logo">BOM PORTAL</div>
-        
         <div class="nav-tabs">
-            <button class="tab-link active" onclick="openTab(event, 'status')">STATUS</button>
-            <a href="bom.html" class="tab-link">BOM</a>
+            <a href="dashboard.html" class="tab-link">STATUS</a>
+            <a href="bom.html" class="tab-link active">BOM</a>
             <a href="users.html" class="tab-link">USERS</a>
         </div>
-
         <div class="user-profile">
             <i class="fas fa-user-circle" style="font-size: 24px; color: var(--primary-color);"></i>
             <span id="displayUserName">Loading...</span>
@@ -92,10 +88,10 @@
     </nav>
 
     <div class="container">
-        <div id="status" class="tab-content active">
-            <div class="construction-icon"><i class="fas fa-tools"></i></div>
-            <h1>Status Dashboard</h1>
-            <p>Welcome, <span class="user-name-text">User</span>! This module is currently <strong>Under Construction</strong>.</p>
+        <div class="tab-content">
+            <div class="construction-icon"><i class="fas fa-hard-hat"></i></div>
+            <h1>Bill of Materials</h1>
+            <p>Welcome, <span id="userWelcome">User</span>! Our engineering team is currently building the BOM management interface. Check back later.</p>
         </div>
     </div>
 
@@ -115,8 +111,7 @@
                 const lastName = user.user_metadata.last_name || '';
                 
                 document.getElementById('displayUserName').innerText = `${firstName} ${lastName}`;
-                const nameSpans = document.querySelectorAll('.user-name-text');
-                nameSpans.forEach(span => span.innerText = firstName);
+                document.getElementById('userWelcome').innerText = firstName;
             }
         }
 
@@ -127,20 +122,6 @@
             } else {
                 window.location.replace('./');
             }
-        }
-
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].classList.remove("active");
-            }
-            tablinks = document.getElementsByClassName("tab-link");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].classList.remove("active");
-            }
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
         }
 
         checkUser();
