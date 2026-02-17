@@ -20,7 +20,6 @@
             --white: #ffffff;
         }
 
-        /* Hide body initially to prevent unauthorized flash */
         body {
             display: none; 
             margin: 0; padding: 0; min-height: 100vh;
@@ -42,12 +41,14 @@
         }
 
         .nav-logo { font-weight: 600; font-size: 1.2rem; color: var(--primary-color); letter-spacing: 1px; }
-        .nav-tabs { display: flex; gap: 5px; }
+        .nav-tabs { display: flex; gap: 5px; height: 100%; }
 
+        /* Updated Tab Styles to support both Buttons and Links */
         .tab-link {
             padding: 20px 25px; cursor: pointer; border: none; background: none;
             font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px;
             color: var(--text-muted); transition: all 0.3s ease; border-bottom: 3px solid transparent;
+            text-decoration: none; display: inline-flex; align-items: center;
         }
 
         .tab-link:hover { color: var(--primary-color); background-color: #f9fafb; }
@@ -81,7 +82,7 @@
         <div class="nav-tabs">
             <button class="tab-link active" onclick="openTab(event, 'status')">STATUS</button>
             <button class="tab-link" onclick="openTab(event, 'bom')">BOM</button>
-            <button class="tab-link" onclick="openTab(event, 'users')">USERS</button>
+            <a href="users.html" class="tab-link">USERS</a>
         </div>
 
         <div class="user-profile">
@@ -103,12 +104,6 @@
             <h1>Bill of Materials</h1>
             <p>Our engineering team is building the BOM management interface. Check back later.</p>
         </div>
-
-        <div id="users" class="tab-content">
-            <div class="construction-icon"><i class="fas fa-user-shield"></i></div>
-            <h1>User Management</h1>
-            <p>Administrative controls are under development.</p>
-        </div>
     </div>
 
     <script>
@@ -116,12 +111,10 @@
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 1. Check user status on load
         async function checkUser() {
             const { data: { user }, error } = await _supabase.auth.getUser();
 
             if (error || !user) {
-                // If not logged in, replace current URL with root (index)
                 window.location.replace('./'); 
             } else {
                 document.body.style.display = 'block';
@@ -134,18 +127,15 @@
             }
         }
 
-        // 2. Handle Logout
         async function handleLogout() {
             const { error } = await _supabase.auth.signOut();
             if (error) {
                 alert("Error logging out: " + error.message);
             } else {
-                // replace('./') removes the current page from history and goes to root
                 window.location.replace('./');
             }
         }
 
-        // 3. Simple Tab Switching
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
             tabcontent = document.getElementsByClassName("tab-content");
