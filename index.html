@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Login | Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --error-red: #ef4444;
+        }
+
+        body {
+            margin: 0; padding: 0; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: var(--bg-gradient); font-family: 'Inter', sans-serif;
+        }
+
+        .login-container {
+            background-color: #ffffff; width: 100%; max-width: 400px;
+            padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        h2 { margin: 0 0 30px; color: var(--text-main); font-weight: 600; }
+
+        .form-group { text-align: left; margin-bottom: 18px; position: relative; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
+
+        .input-wrapper { position: relative; }
+        .input-wrapper i.field-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+        
+        .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; cursor: pointer; font-size: 14px; }
+
+        input, select {
+            width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #e5e7eb;
+            border-radius: 8px; font-size: 14px; box-sizing: border-box;
+            transition: all 0.2s; outline: none; background-color: white;
+        }
+
+        input:focus, select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        input.invalid { border-color: var(--error-red) !important; }
+
+        .error-message { color: var(--error-red); font-size: 11px; margin-top: 4px; display: none; font-weight: 500; }
+
+        .login-btn, .submit-btn, .next-btn, .close-btn {
+            width: 100%; padding: 12px; background-color: var(--primary-color);
+            color: white; border: none; border-radius: 8px; font-size: 16px;
+            font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 10px;
+        }
+
+        .login-btn:hover, .submit-btn:hover, .next-btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+        
+        .back-link { display: block; margin-top: 15px; font-size: 13px; color: var(--text-muted); cursor: pointer; text-decoration: underline; text-align: center; }
+
+        .options-row { display: flex; justify-content: flex-end; margin-bottom: 25px; font-size: 13px; }
+        .forgot-password { color: var(--primary-color); text-decoration: none; font-weight: 600; cursor: pointer; }
+
+        .signup-link { margin-top: 25px; font-size: 14px; color: var(--text-muted); }
+        .signup-link a { color: var(--primary-color); text-decoration: none; font-weight: 600; cursor: pointer; }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        .modal-content {
+            background: white; width: 95%; max-width: 500px; padding: 30px;
+            border-radius: 16px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .form-step { display: none; }
+        .form-step.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .name-row { display: flex; gap: 10px; }
+        .col-3 { flex: 1.5; } .col-1 { flex: 0.6; }
+        
+        .close-modal-icon { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
+        .admin-icon { font-size: 40px; color: var(--primary-color); margin-bottom: 15px; text-align: center;}
+    </style>
+</head>
+<body>
+
+    <div class="login-container">        
+        <h2>BOM PORTAL</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email Address</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope field-icon"></i>
+                    <input type="email" id="loginEmail" placeholder="email@company.com" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock field-icon"></i>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                </div>
+            </div>
+            <div class="options-row">
+                <a class="forgot-password" onclick="openModal('forgotModal')">Forgot password?</a>
+            </div>
+            <button type="submit" id="loginBtn" class="login-btn">Sign In</button>
+        </form>
+        <div class="signup-link">
+            Don't have an account? <a onclick="openModal('signupModal')">Create one</a>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="forgotModal">
+        <div class="modal-content" style="text-align: center;">
+            <button class="close-modal-icon" onclick="closeModal('forgotModal')">&times;</button>
+            <div class="admin-icon"><i class="fas fa-user-shield"></i></div>
+            <h3>Password Assistance</h3>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
+                For security compliance, password resets are handled manually. Please contact your <strong>System Administrator</strong> to verify your identity and reset your credentials.
+            </p>
+            <button class="close-btn" onclick="closeModal('forgotModal')">Understood</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="signupModal">
+        <div class="modal-content">
+            <button class="close-modal-icon" onclick="closeModal('signupModal')">&times;</button>
+            <h3 style="text-align: center; margin-bottom: 25px;">Create New Account</h3>
+
+            <form id="signupForm">
+                <div class="form-step active" id="step1">
+                    <div class="name-row">
+                        <div class="form-group col-3">
+                            <label>First Name</label>
+                            <input type="text" id="fname" class="step1-field" required>
+                        </div>
+                        <div class="form-group col-1">
+                            <label>M.I.</label>
+                            <input type="text" id="mi" maxlength="2" class="step1-field" required>
+                        </div>
+                        <div class="form-group col-3">
+                            <label>Last Name</label>
+                            <input type="text" id="lname" class="step1-field" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope field-icon"></i>
+                            <input type="email" id="newEmail" class="step1-field" placeholder="name@company.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Contact Number</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-phone field-icon"></i>
+                            <input type="tel" id="contact" class="step1-field" placeholder="09xxxxxxxxx" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Position</label>
+                        <select id="position" class="step1-field" required>
+                            <option value="">Select Position</option>
+                            <option value="Technical Engineer">Technical Engineer</option>
+                            <option value="Technical Supervisor">Technical Supervisor</option>
+                            <option value="Technical Head">Technical Head</option>
+                            <option value="Project Manager">Project Manager</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="next-btn" onclick="goToStep(2)">Continue to Account <i class="fas fa-arrow-right"></i></button>
+                </div>
+
+                <div class="form-step" id="step2">
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-key field-icon"></i>
+                            <input type="password" id="regPassword" minlength="8" required>
+                            <i class="fas fa-eye toggle-password" onclick="togglePass('regPassword', this)"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-check-double field-icon"></i>
+                            <input type="password" id="confirmPassword" required>
+                            <i class="fas fa-eye toggle-password" onclick="togglePass('confirmPassword', this)"></i>
+                        </div>
+                        <span id="matchError" class="error-message">Passwords do not match.</span>
+                    </div>
+
+                    <button type="submit" id="regBtn" class="submit-btn">Complete Registration</button>
+                    <span class="back-link" onclick="goToStep(1)">Back to personal details</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://ontnxseisucgdofovrre.supabase.co';
+        const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { 
+            document.getElementById(id).style.display = 'none';
+            if(id === 'signupModal') setTimeout(() => goToStep(1), 300);
+        }
+
+        function goToStep(step) {
+            if (step === 2) {
+                const fields = document.querySelectorAll('.step1-field');
+                let valid = true;
+                fields.forEach(f => { if(!f.checkValidity()) { f.reportValidity(); valid = false; } });
+                if(!valid) return;
+
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step2').classList.add('active');
+            } else {
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step1').classList.add('active');
+            }
+        }
+
+        function togglePass(id, el) {
+            const input = document.getElementById(id);
+            input.type = input.type === "password" ? "text" : "password";
+            el.classList.toggle('fa-eye');
+            el.classList.toggle('fa-eye-slash');
+        }
+
+        // LOGIN LOGIC (Email based)
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+
+            btn.disabled = true;
+            btn.innerText = 'Authenticating...';
+
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert('Login Failed: ' + error.message);
+                btn.disabled = false;
+                btn.innerText = 'Sign In';
+            } else {
+                window.location.href = 'dashboard.html'; 
+            }
+        });
+
+        // REGISTRATION LOGIC
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const p1 = document.getElementById('regPassword').value;
+            const p2 = document.getElementById('confirmPassword').value;
+            const email = document.getElementById('newEmail').value;
+            const errorSpan = document.getElementById('matchError');
+
+            if (p1 !== p2) {
+                errorSpan.style.display = 'block';
+                return;
+            }
+
+            const btn = document.getElementById('regBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            const { data, error } = await _supabase.auth.signUp({
+                email: email,
+                password: p1,
+                options: {
+                    data: {
+                        first_name: document.getElementById('fname').value,
+                        middle_initial: document.getElementById('mi').value,
+                        last_name: document.getElementById('lname').value,
+                        contact: document.getElementById('contact').value,
+                        position: document.getElementById('position').value
+                    }
+                }
+            });
+
+            if (error) {
+                alert('Registration Error: ' + error.message);
+                btn.innerText = 'Complete Registration';
+                btn.disabled = false;
+            } else {
+                alert('Registration successful! Please check your email for a confirmation link.');
+                closeModal('signupModal');
+                this.reset();
+                btn.innerText = 'Complete Registration';
+                btn.disabled = false;
+            }
+        });
+
+        window.onclick = function(event) {
+            if (event.target.className === 'modal-overlay') {
+                closeModal(event.target.id);
+            }
+        }
+    </script>
+</body>
+</html>
