@@ -16,10 +16,10 @@
 
 <style>
     :root {
-        --sidebar-bg: #111827; /* Darker Slate for premium feel */
+        --sidebar-bg: #111827;
         --sidebar-hover: #1f2937;
         --sidebar-active: #374151;
-        --brand-primary: #4f46e5; /* Indigo accent */
+        --brand-primary: #4f46e5;
         --bg-main: #f9fafb;
         --text-main: #111827;
         --text-muted: #6b7280;
@@ -36,14 +36,12 @@
     body {
         display: flex;
         height: 100vh;
-        /* System font stack for a native 'professional' feel */
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background-color: var(--bg-main);
         color: var(--text-main);
         overflow: hidden;
     }
 
-    /* Sidebar Layout */
     .sidebar {
         width: 260px;
         background: var(--sidebar-bg);
@@ -51,7 +49,6 @@
         display: flex;
         flex-direction: column;
         border-right: 1px solid rgba(255, 255, 255, 0.05);
-        z-index: 50;
     }
 
     .sidebar-header {
@@ -87,7 +84,6 @@
         font-weight: 500;
         color: #9ca3af;
         transition: var(--transition);
-        text-decoration: none;
     }
 
     .nav-item i {
@@ -107,15 +103,13 @@
         color: #fff;
     }
 
-    /* Main Section */
     .main {
         flex: 1;
         display: flex;
         flex-direction: column;
-        min-width: 0; /* Prevents flex items from overflowing */
+        min-width: 0;
     }
 
-    /* Header Styling */
     .header {
         height: 64px;
         background: white;
@@ -149,7 +143,6 @@
         background: var(--bg-main);
     }
 
-    /* Content Area */
     .content {
         flex: 1;
         padding: 32px;
@@ -223,6 +216,7 @@
         font-size: 14px;
         color: var(--text-muted);
     }
+
 </style>
 </head>
 
@@ -233,7 +227,7 @@
         </div>
         
         <ul class="sidebar-nav">
-            <li class="nav-item active" id="nav-dashboard" onclick="navigateTo('dashboard.html')">
+            <li class="nav-item" id="nav-dashboard" onclick="navigateTo('dashboard.html')">
                 <span>Dashboard</span>
             </li>
             
@@ -245,7 +239,7 @@
                 <span>User Management</span>
             </li>
             
-            <li class="nav-item" id="nav-settings" onclick="navigateTo('settings.html')">
+            <li class="nav-item active" id="nav-settings" onclick="navigateTo('settings.html')">
                 <span>System Settings</span>
             </li>
         </ul>
@@ -261,7 +255,7 @@
         <header class="header">
             <div style="display: flex; align-items: center; gap: 15px;">
                 <i class="fas fa-bars" style="display: none;" id="mobile-toggle"></i>
-                <h1 id="page-title">Dashboard</h1>
+                <h1 id="page-title">Bill of Materials</h1>
             </div>
 
             <div style="display: flex; align-items: center; gap: 20px;">
@@ -340,6 +334,7 @@
             }
         }
 
+        // Idle Logout Configuration
         const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
         let idleTimer;
 
@@ -378,13 +373,13 @@
                 pageTitle.innerText = "System Settings";
                 document.getElementById('nav-settings').classList.add('active');
             }
-            
+
             // Start tracking activity
             window.onmousemove = resetIdleTimer;
             window.onmousedown = resetIdleTimer;
             window.onclick = resetIdleTimer;
             window.onkeydown = resetIdleTimer;
-
+            
             resetIdleTimer(); // Initialize timer
         };
     </script>

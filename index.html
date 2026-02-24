@@ -3,159 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOM Portal | Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>BOM Admin Portal - Login</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
     <style>
         :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            --text-main: #1f2937;
+            --sidebar-bg: #111827;
+            --brand-primary: #4f46e5;
+            --brand-hover: #4338ca;
+            --bg-main: #f9fafb;
+            --text-main: #111827;
             --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            margin: 0; padding: 0; height: 100vh;
-            display: none; justify-content: center; align-items: center;
-            background: var(--bg-gradient); font-family: 'Inter', sans-serif;
+            height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .login-container {
-            background-color: #ffffff; width: 100%; max-width: 400px;
-            padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--sidebar-bg); /* Dark blue/black from your sidebar */
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-main);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 12px 12px 38px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: var(--brand-primary);
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background: var(--brand-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .login-button:hover {
+            background: var(--brand-hover);
+            transform: translateY(-1px);
+        }
+
+        #admin-notice {
+            display: none;
+            margin-top: 20px;
+            padding: 12px;
+            background-color: #fff1f2;
+            border: 1px solid #fecdd3;
+            border-radius: 8px;
+            color: #be123c;
+            font-size: 12px;
+            line-height: 1.5;
             text-align: center;
         }
-
-        h2 { margin: 0 0 30px; color: var(--text-main); font-weight: 600; letter-spacing: -0.5px; }
-
-        .form-group { text-align: left; margin-bottom: 18px; position: relative; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
-
-        .input-wrapper { position: relative; }
-        .input-wrapper i.field-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
-
-        input {
-            width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #e5e7eb;
-            border-radius: 8px; font-size: 14px; box-sizing: border-box;
-            transition: all 0.2s; outline: none; background-color: white;
-        }
-
-        input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-
-        .login-btn {
-            width: 100%; padding: 12px; background-color: var(--primary-color);
-            color: white; border: none; border-radius: 8px; font-size: 16px;
-            font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 10px;
-        }
-
-        .login-btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
-        
-        .utility-links { margin-top: 25px; font-size: 13px; }
-        .link-text { color: var(--text-muted); text-decoration: none; cursor: pointer; transition: color 0.2s; }
-        .link-text:hover { color: var(--primary-color); text-decoration: underline; }
-
-        /* Modal Styles */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
-            justify-content: center; align-items: center; z-index: 1000;
-        }
-
-        .modal-content {
-            background: white; width: 90%; max-width: 400px; padding: 35px;
-            border-radius: 16px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-
-        .modal-icon { font-size: 40px; color: var(--primary-color); margin-bottom: 20px; }
-        .modal-title { font-size: 18px; font-weight: 600; color: var(--text-main); margin-bottom: 15px; }
-        .modal-body { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 25px; }
-
-        .close-btn {
-            width: 100%; padding: 12px; background-color: #f3f4f6;
-            color: var(--text-main); border: none; border-radius: 8px;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-        }
-
-        .close-btn:hover { background-color: #e5e7eb; }
     </style>
 </head>
 <body>
 
-    <div class="login-container">        
-        <h2>BOM PORTAL</h2>
+    <div class="login-card">
+        <div class="login-header">
+            <h2>BOM Portal</h2>
+            <p>Enter your credentials to access the system</p>
+        </div>
+
         <form id="loginForm">
             <div class="form-group">
                 <label>Email Address</label>
                 <div class="input-wrapper">
-                    <i class="fas fa-envelope field-icon"></i>
-                    <input type="email" id="loginEmail" placeholder="email@company.com" required>
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" placeholder="name@company.com" required>
                 </div>
             </div>
+
             <div class="form-group">
                 <label>Password</label>
                 <div class="input-wrapper">
-                    <i class="fas fa-lock field-icon"></i>
-                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="••••••••" required>
                 </div>
             </div>
-            <button type="submit" id="loginBtn" class="login-btn">Sign In</button>
+
+            <div class="form-footer">
+                <label class="remember-me">
+                    <input type="checkbox" id="remember"> Remember Me
+                </label>
+                <span class="forgot-link" onclick="toggleNotice()">Forgot Password?</span>
+            </div>
+
+            <button type="submit" class="login-button">Sign In</button>
         </form>
 
-        <div class="utility-links">
-            <a class="link-text" onclick="openModal('forgotModal')">Forgot password?</a>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="forgotModal">
-        <div class="modal-content">
-            <i class="fas fa-user-shield modal-icon"></i>
-            <div class="modal-title">Password Reset Required?</div>
-            <div class="modal-body">
-                For security purposes, password resets are managed by the IT Department. Please contact your <strong>System Administrator</strong> to verify your identity and reset your credentials.
-            </div>
-            <button class="close-btn" onclick="closeModal('forgotModal')">Got it</button>
+        <div id="admin-notice">
+            <i class="fas fa-user-shield" style="margin-bottom: 5px; font-size: 16px;"></i><br>
+            <strong>Access Restricted</strong><br>
+            Please contact the system administrator to change or reset your password credentials.
         </div>
     </div>
 
     <script>
         const supabaseUrl = 'https://ontnxseisucgdofovrre.supabase.co';
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function checkSession() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (user) window.location.replace('dashboard.html');
-            else document.body.style.display = 'flex';
+        const loginForm = document.getElementById('loginForm');
+        const notice = document.getElementById('admin-notice');
+
+        function toggleNotice() {
+            notice.style.display = notice.style.display === 'block' ? 'none' : 'block';
         }
-        checkSession();
 
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        loginForm.onsubmit = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('loginBtn');
-            btn.disabled = true;
-            btn.innerText = 'Authenticating...';
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginButton = e.target.querySelector('button');
 
-            const { error } = await _supabase.auth.signInWithPassword({
-                email: document.getElementById('loginEmail').value,
-                password: document.getElementById('loginPassword').value
+            // Visual feedback
+            loginButton.innerText = "Authenticating...";
+            loginButton.style.opacity = "0.7";
+            loginButton.disabled = true;
+
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
             });
 
             if (error) {
-                alert('Login Failed: ' + error.message);
-                btn.disabled = false;
-                btn.innerText = 'Sign In';
+                alert("Login Error: " + error.message);
+                loginButton.innerText = "Sign In";
+                loginButton.style.opacity = "1";
+                loginButton.disabled = false;
             } else {
-                window.location.replace('dashboard.html');
+                // Successful login
+                window.location.href = 'dashboard.html'; 
             }
-        });
+        };
     </script>
 </body>
 </html>

@@ -1,130 +1,387 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOM Portal | Bill of Materials</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOM Admin Portal</title>
 
-    <style>
-        :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --error-red: #ef4444;
-            --white: #ffffff;
+<!-- Inter Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<!-- Supabase CDN (v2) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- FontAwesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+    :root {
+        --sidebar-bg: #111827;
+        --sidebar-hover: #1f2937;
+        --sidebar-active: #374151;
+        --brand-primary: #4f46e5;
+        --bg-main: #f9fafb;
+        --text-main: #111827;
+        --text-muted: #6b7280;
+        --border-color: #e5e7eb;
+        --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        display: flex;
+        height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        overflow: hidden;
+    }
+
+    .sidebar {
+        width: 260px;
+        background: var(--sidebar-bg);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-header {
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-header h2 {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #fff;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+        padding: 16px 12px;
+        list-style: none;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #9ca3af;
+        transition: var(--transition);
+    }
+
+    .nav-item i {
+        margin-right: 12px;
+        font-size: 18px;
+        width: 20px;
+        text-align: center;
+    }
+
+    .nav-item:hover {
+        background: var(--sidebar-hover);
+        color: #fff;
+    }
+
+    .nav-item.active {
+        background: var(--brand-primary);
+        color: #fff;
+    }
+
+    .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .header {
+        height: 64px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .header h1 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: var(--transition);
+    }
+
+    .user-profile:hover {
+        background: var(--bg-main);
+    }
+
+    .content {
+        flex: 1;
+        padding: 32px;
+        overflow-y: auto;
+    }
+
+    .content-card {
+        height: 100%;
+        min-height: 400px;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .placeholder-text {
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .placeholder-text i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        display: block;
+        opacity: 0.2;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 70px; /* Collapse instead of disappear */
         }
-
-        body {
-            display: none; 
-            margin: 0; padding: 0; min-height: 100vh;
-            background: var(--bg-gradient);
-            font-family: 'Inter', sans-serif;
-            color: var(--text-main);
+        .sidebar-header h2, .nav-item span {
+            display: none;
         }
-
-        nav {
-            background-color: var(--white);
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        .header {
+            padding: 0 16px;
         }
+    }
 
-        .nav-logo { font-weight: 600; font-size: 1.2rem; color: var(--primary-color); letter-spacing: 1px; }
-        .nav-tabs { display: flex; gap: 5px; height: 100%; }
+    /* Under Construction */
+    .under-construction {
+        text-align: center;
+        padding: 60px 20px;
+    }
 
-        .tab-link {
-            padding: 20px 25px; cursor: pointer; border: none; background: none;
-            font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px;
-            color: var(--text-muted); transition: all 0.3s ease; border-bottom: 3px solid transparent;
-            text-decoration: none; display: inline-flex; align-items: center;
-        }
+    .gear-icon {
+        font-size: 64px;
+        color: var(--brand-primary);
+        margin-bottom: 20px;
+        animation: spinGear 4s linear infinite;
+    }
 
-        .tab-link:hover { color: var(--primary-color); background-color: #f9fafb; }
-        .tab-link.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
+    @keyframes spinGear {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
 
-        .user-profile { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-main); font-weight: 600; }
-        .logout-btn { color: var(--error-red); text-decoration: none; margin-left: 15px; font-size: 18px; cursor: pointer; }
+    .under-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 8px;
+    }
 
-        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+    .under-subtext {
+        font-size: 14px;
+        color: var(--text-muted);
+    }
 
-        .tab-content {
-            background: var(--white); padding: 60px 40px;
-            border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            text-align: center; animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .construction-icon { font-size: 60px; color: #fbbf24; margin-bottom: 20px; }
-        h1 { margin: 0 0 10px; font-weight: 600; color: var(--text-main); }
-        p { color: var(--text-muted); line-height: 1.6; max-width: 500px; margin: 0 auto; }
-    </style>
+</style>
 </head>
+
 <body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>BOM PORTAL</h2>
+        </div>
+        
+        <ul class="sidebar-nav">
+            <li class="nav-item" id="nav-dashboard" onclick="navigateTo('dashboard.html')">
+                <span>Dashboard</span>
+            </li>
+            
+            <li class="nav-item active" id="nav-bom" onclick="navigateTo('bom.html')">
+                <span>Bill of Materials</span>
+            </li>
+            
+            <li class="nav-item" id="nav-users" onclick="navigateTo('users.html')">
+                <span>User Management</span>
+            </li>
+            
+            <li class="nav-item" id="nav-settings" onclick="navigateTo('settings.html')">
+                <span>System Settings</span>
+            </li>
+        </ul>
 
-    <nav>
-        <div class="nav-logo">BOM PORTAL</div>
-        <div class="nav-tabs">
-            <a href="dashboard.html" class="tab-link">STATUS</a>
-            <a href="bom.html" class="tab-link active">BOM</a>
-            <a href="users.html" class="tab-link">USERS</a>
+        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div class="nav-item" onclick="handleLogout()" style="color: #ef4444;">
+                <span>Sign Out</span>
+            </div>
         </div>
-        <div class="user-profile">
-            <i class="fas fa-user-circle" style="font-size: 24px; color: var(--primary-color);"></i>
-            <span id="displayUserName">Loading...</span>
-            <a onclick="handleLogout()" class="logout-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
-        </div>
-    </nav>
+    </aside>
 
-    <div class="container">
-        <div class="tab-content">
-            <div class="construction-icon"><i class="fas fa-hard-hat"></i></div>
-            <h1>Bill of Materials</h1>
-            <p>Welcome, <span id="userWelcome">User</span>! Our engineering team is currently building the BOM management interface. Check back later.</p>
-        </div>
-    </div>
+    <main class="main">
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <i class="fas fa-bars" style="display: none;" id="mobile-toggle"></i>
+                <h1 id="page-title">Bill of Materials</h1>
+            </div>
+
+             <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="user-profile">
+                    <div style="width: 32px; height: 32px; background: var(--brand-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 4px;">
+                        <i class="fas fa-user" style="color: white; font-size: 14px;"></i>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span id="displayUserName" style="color: var(--text-main); line-height: 1.2;">Loading...</span>
+                        <span id="displayUserRole" style="font-size: 11px; color: var(--text-muted);">Access Level</span>
+                    </div>
+                </div>
+                
+                <button onclick="handleLogout()" title="Sign Out" style="background: none; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; cursor: pointer; color: #ef4444; transition: var(--transition);">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <section class="content">
+            <div id="main-content" class="content-card">
+                <div class="under-construction">
+                    <i class="fas fa-cog gear-icon"></i>
+                    <div class="under-title">Module Under Development</div>
+                    <div class="under-subtext">
+                        This section is currently being configured and will be available soon.
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
     <script>
         const supabaseUrl = 'https://ontnxseisucgdofovrre.supabase.co';
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function checkUser() {
-            const { data: { user }, error } = await _supabase.auth.getUser();
+        // Check if user is logged in & Get Profile Data
+        async function checkAuth() {
+            const { data: { user }, error: authError } = await _supabase.auth.getUser();
 
-            if (error || !user) {
-                window.location.replace('./'); 
-            } else {
-                document.body.style.display = 'block';
-                const firstName = user.user_metadata.first_name || 'User';
-                const lastName = user.user_metadata.last_name || '';
-                
-                document.getElementById('displayUserName').innerText = `${firstName} ${lastName}`;
-                document.getElementById('userWelcome').innerText = firstName;
+            if (authError || !user) {
+                window.location.replace('./index.html');
+                return;
             }
+
+            // Fetch details
+            const { data: profile, error: profileError } = await _supabase
+                .from('profiles')
+                .select('first_name, last_name, role') // Make sure 'role' is spelled exactly like this in Supabase
+                .eq('id', user.id)
+                .single();
+
+            if (profile && profile.role) {
+                const fullName = `${profile.first_name} ${profile.last_name}`;
+                document.getElementById('displayUserName').innerText = fullName;
+                
+                // This line shows the actual role from the database
+                document.getElementById('displayUserRole').innerText = profile.role; 
+            } else {
+                // This is what you are currently seeing
+                document.getElementById('displayUserName').innerText = user.email;
+                document.getElementById('displayUserRole').innerText = "Role Not Set"; 
+            }
+        }
+
+        function navigateTo(url) {
+            if (window.location.pathname.includes(url)) return;
+            window.location.href = url;
         }
 
         async function handleLogout() {
-            const { error } = await _supabase.auth.signOut();
-            if (error) {
-                alert("Error logging out: " + error.message);
-            } else {
-                window.location.replace('./');
+            if(confirm("Are you sure you want to sign out?")) {
+                await _supabase.auth.signOut();
+                window.location.replace('./index.html');
             }
         }
 
-        checkUser();
+        // Idle Logout Configuration
+        const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+        let idleTimer;
+
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(performIdleLogout, IDLE_TIMEOUT);
+        }
+
+        async function performIdleLogout() {
+            alert("You have been logged out due to inactivity.");
+            await _supabase.auth.signOut();
+            window.location.replace('./index.html');
+        }
+
+        window.onload = () => {
+            checkAuth(); // Run security check
+
+            const path = window.location.pathname;
+            const pageTitle = document.getElementById("page-title");
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            if (path.includes('dashboard.html')) {
+                pageTitle.innerText = "Overview Dashboard";
+                document.getElementById('nav-dashboard').classList.add('active');
+            } 
+            else if (path.includes('bom.html')) {
+                pageTitle.innerText = "Bill of Materials";
+                document.getElementById('nav-bom').classList.add('active');
+            } 
+            else if (path.includes('users.html')) {
+                pageTitle.innerText = "User Management";
+                document.getElementById('nav-users').classList.add('active');
+            } 
+            else if (path.includes('settings.html')) {
+                pageTitle.innerText = "System Settings";
+                document.getElementById('nav-settings').classList.add('active');
+            }
+
+            // Start tracking activity
+            window.onmousemove = resetIdleTimer;
+            window.onmousedown = resetIdleTimer;
+            window.onclick = resetIdleTimer;
+            window.onkeydown = resetIdleTimer;
+            
+            resetIdleTimer(); // Initialize timer
+        };
     </script>
 </body>
 </html>
