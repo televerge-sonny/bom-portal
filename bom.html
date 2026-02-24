@@ -42,6 +42,7 @@
         overflow: hidden;
     }
 
+    /* --- Sidebar --- */
     .sidebar {
         width: 260px;
         background: var(--sidebar-bg);
@@ -103,6 +104,7 @@
         color: #fff;
     }
 
+    /* --- Main Layout --- */
     .main {
         flex: 1;
         display: flex;
@@ -139,9 +141,7 @@
         transition: var(--transition);
     }
 
-    .user-profile:hover {
-        background: var(--bg-main);
-    }
+    .user-profile:hover { background: var(--bg-main); }
 
     .content {
         flex: 1;
@@ -150,73 +150,89 @@
     }
 
     .content-card {
-        height: 100%;
+        width: 100%;
         min-height: 400px;
         background: white;
         border: 1px solid var(--border-color);
         border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         display: flex;
         flex-direction: column;
+    }
+
+    /* --- Modal Styles (Aligned with Users.html) --- */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none; 
         align-items: center;
         justify-content: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        z-index: 1000;
     }
 
-    .placeholder-text {
-        text-align: center;
-        color: var(--text-muted);
+    .modal-content {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        width: 650px; /* Wider for BOM entry compared to User management */
+        max-width: 90%;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
 
-    .placeholder-text i {
-        font-size: 48px;
-        margin-bottom: 16px;
-        display: block;
-        opacity: 0.2;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .sidebar {
-            width: 70px; /* Collapse instead of disappear */
-        }
-        .sidebar-header h2, .nav-item span {
-            display: none;
-        }
-        .header {
-            padding: 0 16px;
-        }
-    }
-
-    /* Under Construction */
-    .under-construction {
-        text-align: center;
-        padding: 60px 20px;
-    }
-
-    .gear-icon {
-        font-size: 64px;
-        color: var(--brand-primary);
+    .modal-header {
         margin-bottom: 20px;
-        animation: spinGear 4s linear infinite;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 12px;
     }
 
-    @keyframes spinGear {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+    .form-group {
+        margin-bottom: 15px;
     }
 
-    .under-title {
-        font-size: 18px;
+    .form-group label {
+        display: block;
+        font-size: 13px;
         font-weight: 600;
-        color: var(--text-main);
-        margin-bottom: 8px;
-    }
-
-    .under-subtext {
-        font-size: 14px;
+        margin-bottom: 5px;
         color: var(--text-muted);
     }
 
+    .form-group input, .form-group textarea, .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 14px;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn-secondary {
+        padding: 8px 16px;
+        background: #e5e7eb;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 768px) {
+        .sidebar { width: 70px; }
+        .sidebar-header h2, .nav-item span { display: none; }
+        .header { padding: 0 16px; }
+    }
 </style>
 </head>
 
@@ -258,7 +274,7 @@
                 <h1 id="page-title">Bill of Materials</h1>
             </div>
 
-             <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 20px;">
                 <div class="user-profile">
                     <div style="width: 32px; height: 32px; background: var(--brand-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 4px;">
                         <i class="fas fa-user" style="color: white; font-size: 14px;"></i>
@@ -276,16 +292,53 @@
         </header>
 
         <section class="content">
-            <div id="main-content" class="content-card">
-                <div class="under-construction">
-                    <i class="fas fa-cog gear-icon"></i>
-                    <div class="under-title">Module Under Development</div>
-                    <div class="under-subtext">
-                        This section is currently being configured and will be available soon.
-                    </div>
+            <div id="main-content" class="content-card" style="padding: 20px; display: block;"> <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                    <button id="new-bom-btn" onclick="openModal()" style="padding: 8px 16px; background-color: var(--brand-primary); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-plus" style="margin-right: 8px;"></i>New BOM
+                    </button>
                 </div>
+                
+                <table id="bom-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="background: #f3f4f6; color: #111827;">
+                            <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">BOM ID</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">CLIENT</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">DESCRIPTION</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">CREATED BY</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">GRAND TOTAL</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: center;">ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bom-table-body">
+                        <tr>
+                            <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                                <i class="fas fa-folder-open" style="display: block; font-size: 24px; margin-bottom: 8px; opacity: 0.5;"></i>
+                                No BOM records available.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
+
+        <div class="modal-overlay" id="bomModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Create New BOM</h3>
+                </div>
+                
+                <form id="bomForm">
+                    <div style="min-height: 100px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border-color); border-radius: 8px; margin-bottom: 20px;">
+                        <p style="color: var(--text-muted); font-size: 13px;">Form content will be added here...</p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" style="padding: 8px 16px; background: var(--brand-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Save BOM</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -293,94 +346,48 @@
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Check if user is logged in & Get Profile Data
-        async function checkAuth() {
-            const { data: { user }, error: authError } = await _supabase.auth.getUser();
+        // --- NEW: Navigation Function ---
+        function navigateTo(page) {
+            window.location.href = page;
+        }
 
-            if (authError || !user) {
-                window.location.replace('./index.html');
+        // --- NEW: Logout Function ---
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+
+        // Modal Controls
+        function openModal() {
+            document.getElementById('bomModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('bomModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('bomModal');
+            if (event.target == modal) closeModal();
+        }
+
+        // Fetch User Data on Load
+        window.onload = async () => {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
                 return;
             }
-
-            // Fetch details
-            const { data: profile, error: profileError } = await _supabase
-                .from('profiles')
-                .select('first_name, last_name, role') // Make sure 'role' is spelled exactly like this in Supabase
-                .eq('id', user.id)
-                .single();
-
-            if (profile && profile.role) {
-                const fullName = `${profile.first_name} ${profile.last_name}`;
-                document.getElementById('displayUserName').innerText = fullName;
-                
-                // This line shows the actual role from the database
-                document.getElementById('displayUserRole').innerText = profile.role; 
-            } else {
-                // This is what you are currently seeing
-                document.getElementById('displayUserName').innerText = user.email;
-                document.getElementById('displayUserRole').innerText = "Role Not Set"; 
-            }
-        }
-
-        function navigateTo(url) {
-            if (window.location.pathname.includes(url)) return;
-            window.location.href = url;
-        }
-
-        async function handleLogout() {
-            if(confirm("Are you sure you want to sign out?")) {
-                await _supabase.auth.signOut();
-                window.location.replace('./index.html');
-            }
-        }
-
-        // Idle Logout Configuration
-        const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
-        let idleTimer;
-
-        function resetIdleTimer() {
-            clearTimeout(idleTimer);
-            idleTimer = setTimeout(performIdleLogout, IDLE_TIMEOUT);
-        }
-
-        async function performIdleLogout() {
-            alert("You have been logged out due to inactivity.");
-            await _supabase.auth.signOut();
-            window.location.replace('./index.html');
-        }
-
-        window.onload = () => {
-            checkAuth(); // Run security check
-
-            const path = window.location.pathname;
-            const pageTitle = document.getElementById("page-title");
             
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            // Update profile display (Replace with actual metadata if available)
+            document.getElementById('displayUserName').innerText = session.user.email.split('@')[0];
+            document.getElementById('displayUserRole').innerText = "Administrator";
+        };
 
-            if (path.includes('dashboard.html')) {
-                pageTitle.innerText = "Overview Dashboard";
-                document.getElementById('nav-dashboard').classList.add('active');
-            } 
-            else if (path.includes('bom.html')) {
-                pageTitle.innerText = "Bill of Materials";
-                document.getElementById('nav-bom').classList.add('active');
-            } 
-            else if (path.includes('users.html')) {
-                pageTitle.innerText = "User Management";
-                document.getElementById('nav-users').classList.add('active');
-            } 
-            else if (path.includes('settings.html')) {
-                pageTitle.innerText = "System Settings";
-                document.getElementById('nav-settings').classList.add('active');
-            }
-
-            // Start tracking activity
-            window.onmousemove = resetIdleTimer;
-            window.onmousedown = resetIdleTimer;
-            window.onclick = resetIdleTimer;
-            window.onkeydown = resetIdleTimer;
-            
-            resetIdleTimer(); // Initialize timer
+        document.getElementById('bomForm').onsubmit = function(e) {
+            e.preventDefault();
+            alert("BOM saved (Placeholder)");
+            closeModal();
         };
     </script>
 </body>
