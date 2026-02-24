@@ -259,12 +259,6 @@
                 <span>System Settings</span>
             </li>
         </ul>
-
-        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div class="nav-item" onclick="handleLogout()" style="color: #ef4444;">
-                <span>Sign Out</span>
-            </div>
-        </div>
     </aside>
 
     <main class="main">
@@ -328,8 +322,22 @@
                 </div>
                 
                 <form id="bomForm">
-                    <div style="min-height: 100px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border-color); border-radius: 8px; margin-bottom: 20px;">
-                        <p style="color: var(--text-muted); font-size: 13px;">Form content will be added here...</p>
+                    <div class="form-group">
+                        <label>BOM ID</label>
+                        <input type="text" id="bomIdDisplay" readonly 
+                            style="background-color: #f3f4f6; cursor: not-allowed; font-weight: 600; color: var(--brand-primary);" 
+                            placeholder="BOM0001">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Client Name</label>
+                        <input type="text" id="clientName" placeholder="Enter client name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="bomDescription" rows="3" placeholder="Enter project details..." 
+                                style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
                     </div>
 
                     <div class="modal-footer">
@@ -346,24 +354,67 @@
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- NEW: Navigation Function ---
+        // --- 1. AUTH & HEADER SYNC ---
+        async function checkAuth() {
+            // Get current session
+            const { data: { user }, error: authError } = await _supabase.auth.getUser();
+
+            if (authError || !user) {
+                window.location.replace('./index.html');
+                return;
+            }
+
+            // Fetch the logged-in user's profile to display in header
+            const { data: profile, error: profileError } = await _supabase
+                .from('profiles')
+                .select('first_name, last_name, role')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                document.getElementById('displayUserName').innerText = `${profile.first_name} ${profile.last_name}`;
+                document.getElementById('displayUserRole').innerText = profile.role;
+            } else {
+                // Fallback to email if profile row is missing
+                document.getElementById('displayUserName').innerText = user.email;
+                document.getElementById('displayUserRole').innerText = "Authorized User";
+            }
+        }
+
+        async function handleLogout() {
+            if(confirm("Are you sure you want to sign out?")) {
+                await _supabase.auth.signOut();
+                window.location.replace('./index.html');
+            }
+        }
+
+        // --- 2. NAVIGATION ---
         function navigateTo(page) {
             window.location.href = page;
         }
 
-        // --- NEW: Logout Function ---
-        async function handleLogout() {
-            await _supabase.auth.signOut();
-            window.location.href = 'index.html';
-        }
-
-        // Modal Controls
-        function openModal() {
+        // --- 3. MODAL LOGIC ---
+        async function openModal() {
             document.getElementById('bomModal').style.display = 'flex';
+            const nextId = await generateNextBomId();
+            document.getElementById('bomIdDisplay').value = nextId;
         }
 
         function closeModal() {
             document.getElementById('bomModal').style.display = 'none';
+            document.getElementById('bomForm').reset();
+        }
+
+        async function generateNextBomId() {
+            const tableBody = document.getElementById('bom-table-body');
+            const rowCount = tableBody.getElementsByTagName('tr').length;
+            const isTableEmpty = tableBody.innerHTML.includes("No BOM records available");
+            
+            let currentNumber = isTableEmpty ? 0 : rowCount;
+            let nextNumber = currentNumber + 1;
+            let formattedNumber = nextNumber.toString().padStart(4, '0');
+            
+            return `BOM${formattedNumber}`;
         }
 
         window.onclick = function(event) {
@@ -371,19 +422,13 @@
             if (event.target == modal) closeModal();
         }
 
-        // Fetch User Data on Load
+        // --- 4. PAGE INITIALIZATION ---
         window.onload = async () => {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            // Update profile display (Replace with actual metadata if available)
-            document.getElementById('displayUserName').innerText = session.user.email.split('@')[0];
-            document.getElementById('displayUserRole').innerText = "Administrator";
+            // Run the auth check to populate header and verify session
+            await checkAuth();
         };
 
+        // --- 5. FORM SUBMISSION ---
         document.getElementById('bomForm').onsubmit = function(e) {
             e.preventDefault();
             alert("BOM saved (Placeholder)");

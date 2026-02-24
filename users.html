@@ -292,19 +292,13 @@
                 <span>System Settings</span>
             </li>
         </ul>
-
-        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div class="nav-item" onclick="handleLogout()" style="color: #ef4444;">
-                <span>Sign Out</span>
-            </div>
-        </div>
     </aside>
 
     <main class="main">
         <header class="header">
             <div style="display: flex; align-items: center; gap: 15px;">
                 <i class="fas fa-bars" style="display: none;" id="mobile-toggle"></i>
-                <h1 id="page-title">Bill of Materials</h1>
+                <h1 id="page-title">Users Management</h1>
             </div>
 
             <div style="display: flex; align-items: center; gap: 20px;">
@@ -331,7 +325,7 @@
                         + New User
                     </button>
                 </div>
-                <table id="bom-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                <table id="users-table" style="width: 100%; border-collapse: collapse; text-align: left;">
                     <thead>
                         <tr style="background: #f3f4f6; color: #111827;">
                             <th style="padding: 12px; border-bottom: 1px solid #e5e7eb;">Full Name</th>
@@ -339,7 +333,7 @@
                             <th style="padding: 12px; border-bottom: 1px solid #e5e7eb;">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="bom-table-body">
+                    <tbody id="users-table-body">
                         <tr>
                             <td colspan="3" style="padding: 20px; text-align: center; color: var(--text-muted);">
                                 No records available.
@@ -456,14 +450,15 @@
     }
 
     async function handleLogout() {
-        const { error } = await _supabase.auth.signOut();
-        if (error) alert(error.message);
-        window.location.replace('./index.html');
+        if(confirm("Are you sure you want to sign out?")) {
+            await _supabase.auth.signOut();
+            window.location.replace('./index.html');
+        }
     }
 
     // --- 2. FETCH USERS (FOR THE TABLE) ---
     async function fetchUsers() {
-        const tableBody = document.getElementById('bom-table-body');
+        const tableBody = document.getElementById('users-table-body');
         
         const { data: users, error } = await _supabase
             .from('profiles')
