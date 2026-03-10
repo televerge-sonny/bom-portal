@@ -305,8 +305,8 @@
             // Fetch details
             const { data: profile, error: profileError } = await _supabase
                 .from('profiles')
-                .select('first_name, last_name, role') // Make sure 'role' is spelled exactly like this in Supabase
-                .eq('id', user.id)
+                .select('first_name, last_name, role')
+                .eq('id', user.id) // This would crash without the 'return' above
                 .single();
 
             if (profile && profile.role) {
@@ -330,10 +330,9 @@
         async function handleLogout() {
             if(confirm("Are you sure you want to sign out?")) {
                 await _supabase.auth.signOut();
-                window.location.replace('./index.html');
             }
         }
-
+        
         const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
         let idleTimer;
 
@@ -350,6 +349,7 @@
 
         window.onload = () => {
             checkAuth(); // Run security check
+            fetchUsers();
 
             const path = window.location.pathname;
             const pageTitle = document.getElementById("page-title");

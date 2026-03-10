@@ -354,9 +354,8 @@
         const supabaseKey = 'sb_publishable_PIJdCQKXj8lJqicuJeBk2Q_vCRvJBGL';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- 1. AUTH & HEADER SYNC ---
+       // Check if user is logged in & Get Profile Data
         async function checkAuth() {
-            // Get current session
             const { data: { user }, error: authError } = await _supabase.auth.getUser();
 
             if (authError || !user) {
@@ -364,21 +363,29 @@
                 return;
             }
 
-            // Fetch the logged-in user's profile to display in header
+            // Fetch details
             const { data: profile, error: profileError } = await _supabase
                 .from('profiles')
                 .select('first_name, last_name, role')
-                .eq('id', user.id)
+                .eq('id', user.id) // This would crash without the 'return' above
                 .single();
 
-            if (profile) {
-                document.getElementById('displayUserName').innerText = `${profile.first_name} ${profile.last_name}`;
-                document.getElementById('displayUserRole').innerText = profile.role;
+            if (profile && profile.role) {
+                const fullName = `${profile.first_name} ${profile.last_name}`;
+                document.getElementById('displayUserName').innerText = fullName;
+                
+                // This line shows the actual role from the database
+                document.getElementById('displayUserRole').innerText = profile.role; 
             } else {
-                // Fallback to email if profile row is missing
+                // This is what you are currently seeing
                 document.getElementById('displayUserName').innerText = user.email;
-                document.getElementById('displayUserRole').innerText = "Authorized User";
+                document.getElementById('displayUserRole').innerText = "Role Not Set"; 
             }
+        }
+
+        function navigateTo(url) {
+            if (window.location.pathname.includes(url)) return;
+            window.location.href = url;
         }
 
         async function handleLogout() {
@@ -388,12 +395,21 @@
             }
         }
 
-        // --- 2. NAVIGATION ---
-        function navigateTo(page) {
-            window.location.href = page;
+        const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+        let idleTimer;
+
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(performIdleLogout, IDLE_TIMEOUT);
         }
 
-        // --- 3. MODAL LOGIC ---
+        async function performIdleLogout() {
+            alert("You have been logged out due to inactivity.");
+            await _supabase.auth.signOut();
+            window.location.replace('./index.html');
+        }
+
+        // --- MODAL LOGIC ---
         async function openModal() {
             document.getElementById('bomModal').style.display = 'flex';
             const nextId = await generateNextBomId();
@@ -422,17 +438,46 @@
             if (event.target == modal) closeModal();
         }
 
-        // --- 4. PAGE INITIALIZATION ---
-        window.onload = async () => {
-            // Run the auth check to populate header and verify session
-            await checkAuth();
-        };
-
-        // --- 5. FORM SUBMISSION ---
+        // --- FORM SUBMISSION ---
         document.getElementById('bomForm').onsubmit = function(e) {
             e.preventDefault();
             alert("BOM saved (Placeholder)");
             closeModal();
+        };
+
+        window.onload = () => {
+            checkAuth(); // Run security check
+            fetchUsers();
+
+            const path = window.location.pathname;
+            const pageTitle = document.getElementById("page-title");
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            if (path.includes('dashboard.html')) {
+                pageTitle.innerText = "Overview Dashboard";
+                document.getElementById('nav-dashboard').classList.add('active');
+            } 
+            else if (path.includes('bom.html')) {
+                pageTitle.innerText = "Bill of Materials";
+                document.getElementById('nav-bom').classList.add('active');
+            } 
+            else if (path.includes('users.html')) {
+                pageTitle.innerText = "User Management";
+                document.getElementById('nav-users').classList.add('active');
+            } 
+            else if (path.includes('settings.html')) {
+                pageTitle.innerText = "System Settings";
+                document.getElementById('nav-settings').classList.add('active');
+            }
+            
+            // Start tracking activity
+            window.onmousemove = resetIdleTimer;
+            window.onmousedown = resetIdleTimer;
+            window.onclick = resetIdleTimer;
+            window.onkeydown = resetIdleTimer;
+
+            resetIdleTimer(); // Initialize timer
         };
     </script>
 </body>

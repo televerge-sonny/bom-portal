@@ -345,6 +345,7 @@
 
         window.onload = () => {
             checkAuth(); // Run security check
+            fetchUsers();
 
             const path = window.location.pathname;
             const pageTitle = document.getElementById("page-title");
