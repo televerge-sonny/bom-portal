@@ -37,6 +37,36 @@
             justify-content: center;
         }
 
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 24px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #9ca3af; /* Default Gray */
+        }
+
+        .status-dot.connected {
+            background-color: #10b981; /* Green */
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .status-dot.disconnected {
+            background-color: #ef4444; /* Red */
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+
         .login-card {
             width: 100%;
             max-width: 420px;
@@ -196,6 +226,11 @@
             <button type="submit" class="login-button">Sign In</button>
         </form>
 
+        <div class="connection-status">
+            <div id="status-dot" class="status-dot"></div>
+            <span id="status-text">Checking Connection...</span>
+        </div>
+
         <div id="admin-notice">
             <i class="fas fa-user-shield" style="margin-bottom: 5px; font-size: 16px;"></i><br>
             <strong>Access Restricted</strong><br>
@@ -210,6 +245,58 @@
 
         const loginForm = document.getElementById('loginForm');
         const notice = document.getElementById('admin-notice');
+
+        // Function to check Supabase connection
+        // Function to check Supabase connection via a real network ping
+        async function checkConnection() {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+
+            // First check: Is the browser even online?
+            if (!navigator.onLine) {
+                updateStatus(false);
+                return;
+            }
+
+            try {
+                // We fetch a health check or a small piece of data to force a network request
+                // Using a timeout to ensure it doesn't hang forever if the net is "zombie"
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const { data, error } = await _supabase.from('profiles').select('count', { count: 'planned', head: true }).limit(1).abortSignal(controller.signal);
+                
+                clearTimeout(timeoutId);
+                updateStatus(true);
+            } catch (err) {
+                updateStatus(false);
+            }
+        }
+
+        function updateStatus(isConnected) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            
+            if (isConnected) {
+                dot.className = 'status-dot connected';
+                text.innerText = 'Connected';
+                text.style.color = '#10b981';
+            } else {
+                dot.className = 'status-dot disconnected';
+                text.innerText = 'Disconnected';
+                text.style.color = '#ef4444';
+            }
+        }
+
+        // 1. Check on load
+        checkConnection();
+
+        // 2. Listen for browser losing/gaining internet
+        window.addEventListener('online', checkConnection);
+        window.addEventListener('offline', () => updateStatus(false));
+
+        // 3. (Optional) Heartbeat: Check every 30 seconds
+        setInterval(checkConnection, 30000);
 
         function toggleNotice() {
             notice.style.display = notice.style.display === 'block' ? 'none' : 'block';
