@@ -349,6 +349,18 @@
         padding-right: 10px !important;
     }
 
+    .grand-total-wrapper {
+    position: sticky;
+    bottom: 20px; 
+    margin-top: 30px; 
+    z-index: 99; 
+    transition: all 0.3s ease;
+    }
+
+    .grand-total-wrapper:not(:last-child) {
+        opacity: 0.95;
+    }
+
     /* --- Responsive --- */
     @media (max-width: 768px) {
         .sidebar { width: 70px; }
@@ -1180,7 +1192,12 @@
                                 </tr>
                                 <tr>
                                     <td>Accommodation for Tech Eng</td>
-                                    <td><input type="number" id="mobi-acc-eng" placeholder="Per Night" oninput="calculateMobi()"></td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <input type="number" id="mobi-acc-eng-days" placeholder="Days" style="width: 50%;" oninput="calculateMobi()">
+                                            <input type="number" id="mobi-acc-eng-rate" placeholder="Per Night" style="width: 50%;" oninput="calculateMobi()">
+                                        </div>
+                                    </td>
                                     <td id="display-acc-eng" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
@@ -1203,15 +1220,16 @@
                         </table>
                     </div>
 
-                    <div style="margin-top: 30px; background: var(--sidebar-bg); color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h3 style="margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9;">Project Grand Total</h3>
-                                <p style="margin: 5px 0 0 0; font-size: 11px; opacity: 0.7;">Inclusive of Hardware, Nodes, Labor, and Mobilization</p>
-                            </div>
-                            <div style="text-align: right;">
-                                <span id="grand-total-display" style="font-size: 24px; font-weight: 800; color: #fbbf24;">0.00</span>
-                                <span style="display: block; font-size: 10px; opacity: 0.8; margin-top: 2px;">PHP (Estimated)</span>
+                    <div class="grand-total-wrapper">
+                        <div style="margin-top: 30px; background: var(--sidebar-bg); color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h3 style="margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9;">Project Grand Total</h3>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span id="grand-total-display" style="font-size: 24px; font-weight: 800; color: #fbbf24;">0.00</span>
+                                    <span style="display: block; font-size: 10px; opacity: 0.8; margin-top: 2px;">PHP (Estimated)</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1338,7 +1356,14 @@
 
             const allNumberInputs = document.querySelectorAll('#bomModal input[type="number"]');
             allNumberInputs.forEach(input => {
-                input.value = (input.id === 'labor-rate') ? 700 : 0;
+                // CHANGE THIS SECTION:
+                if (input.id === 'labor-rate') {
+                    input.value = 700; 
+                } else if (input.id === 'mobi-trip-count' || input.id === 'labor-days') {
+                    input.value = 1; 
+                } else {
+                    input.value = "";
+                }
             });
 
             const allDisplays = document.querySelectorAll('[id$="-subtotal"], [id^="display-"]');
@@ -1355,15 +1380,34 @@
         }
 
         async function generateNextBomId() {
-            const tableBody = document.getElementById('bom-table-body');
-            const rowCount = tableBody.getElementsByTagName('tr').length;
-            const isTableEmpty = tableBody.innerHTML.includes("No BOM records available");
-            
-            let currentNumber = isTableEmpty ? 0 : rowCount;
-            let nextNumber = currentNumber + 1;
-            let formattedNumber = nextNumber.toString().padStart(4, '0');
-            
-            return `BOM${formattedNumber}`;
+            try {
+                // 1. Fetch the total count of records directly from your Supabase table
+                // 'head: true' means we only want the count, not the actual data (faster)
+                const { count, error } = await _supabase
+                    .from('bom_records') 
+                    .select('*', { count: 'exact', head: true });
+
+                if (error) throw error;
+
+                // 2. If the table is empty, count will be 0. We add 1 to get the next ID.
+                const nextNumber = (count || 0) + 1;
+
+                // 3. Format to 4 digits (e.g., 0001, 0002)
+                const formattedNumber = nextNumber.toString().padStart(4, '0');
+
+                return `BOM${formattedNumber}`;
+
+            } catch (err) {
+                console.error("Error generating BOM ID:", err);
+                
+                // Fallback: If the database is offline, try to count the local table rows
+                const tableBody = document.getElementById('bom-table-body');
+                const rowCount = tableBody ? tableBody.getElementsByTagName('tr').length : 0;
+                const isTableEmpty = tableBody?.innerHTML.includes("No BOM records available");
+                
+                const fallbackNum = (isTableEmpty ? 0 : rowCount) + 1;
+                return `BOM${fallbackNum.toString().padStart(4, '0')}`;
+            }
         }
 
         window.onclick = function(event) {
@@ -1493,7 +1537,7 @@
 
             // 1. Sum up all rows in this table
             rows.forEach(row => {
-                const totalCell = row.cells[row.cells.length - 2]; // Second to last cell
+                const totalCell = row.cells[row.cells.length - 2];
                 const val = parseFloat(totalCell.innerText.replace(/,/g, '')) || 0;
                 itemsSum += val;
             });
@@ -1521,6 +1565,8 @@
                 minimumFractionDigits: 2, 
                 maximumFractionDigits: 2
             });
+
+            updateGrandTotal();
         }
 
         function refreshMaxHeight(element) {
@@ -1534,24 +1580,19 @@
             const row = input.closest('tr');
             const inputs = row.querySelectorAll('input[type="number"]');
             
-            // index 0 = Qty
-            // index 1 = Price (Skipped)
-            // index 2 = Node
             const qty = parseFloat(inputs[0].value) || 0;
             const node = parseFloat(inputs[2].value) || 0;
             
-            // Total calculation: Qty * Node
             const total = qty * node;
             
-            // Update the row total cell (6th cell)
             const totalCell = row.cells[5]; 
             totalCell.innerText = total.toLocaleString(undefined, {
                 minimumFractionDigits: 2, 
                 maximumFractionDigits: 2
             });
             
-            // Update the overall table subtotal
             updateSubtotal('node-subtotal');
+            updateGrandTotal();
         }
 
         function calculateLabor() {
@@ -1612,7 +1653,7 @@
             });
 
             if (typeof calculateMobi === "function") calculateMobi();
-            updateGrandTotal();
+            //updateGrandTotal();
         }
 
         function calculateMobi() {
@@ -1649,7 +1690,10 @@
 
             // Accommodations (Direct Input)
             const accAmountInst = parseFloat(document.getElementById('mobi-acc-inst').value) || 0;
-            const accAmountEng = parseFloat(document.getElementById('mobi-acc-eng').value) || 0;
+            const accDaysEng = parseFloat(document.getElementById('mobi-acc-eng-days').value) || 0;
+            const accRateEng = parseFloat(document.getElementById('mobi-acc-eng-rate').value) || 0;
+            const accAmountEng = accDaysEng * accRateEng;
+            
 
             // Deliveries
             const delCebu = parseFloat(document.getElementById('mobi-del-cebu').value) || 0;
@@ -1690,7 +1734,9 @@
                             getVal('voice-subtotal') + 
                             getVal('fire-subtotal') + 
                             getVal('power-subtotal') +
-                            getVal('rough-subtotal');
+                            getVal('cabinet-subtotal') +
+                            getVal('passive-subtotal') +
+                            getVal('roughin-subtotal');
 
             // 2. Specialized Calculations
             const nodes = getVal('node-subtotal');
@@ -1711,7 +1757,6 @@
                 });
             }
 
-            updateGrandTotal();
         }
 
         // --- FORM SUBMISSION ---
