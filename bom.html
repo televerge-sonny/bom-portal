@@ -176,18 +176,41 @@
     }
 
     .modal-content {
-        background: white;
-        padding: 24px;
+        background: white; /* This was missing */
+        width: 950px;      /* This was missing */
+        max-width: 95%;    /* Ensures it doesn't break on smaller screens */
+        max-height: 90vh; 
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; 
         border-radius: 12px;
-        width: 650px; /* Wider for BOM entry compared to User management */
-        max-width: 90%;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2); /* Adds depth back */
     }
 
     .modal-header {
-        margin-bottom: 20px;
+        flex-shrink: 0;
+        padding: 20px;
+        background: #fff;
         border-bottom: 1px solid var(--border-color);
-        padding-bottom: 12px;
+    }
+
+    #bomForm {
+        overflow-y: auto; /* Adds the scrollbar here */
+        padding: 20px;
+        flex-grow: 1;
+    }
+
+    #bomForm::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    #bomForm::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+
+    #bomForm::-webkit-scrollbar-thumb:hover {
+        background: var(--brand-primary);
     }
 
     .form-group {
@@ -227,12 +250,112 @@
         font-weight: 500;
     }
 
+    /* --- Collapsible Table Styles --- */
+    .collapsible-wrapper {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-top: 10px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .collapsible-trigger {
+        width: 100%;
+        padding: 12px 16px;
+        background: #f8fafc;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        border: none;
+        outline: none;
+        transition: background 0.2s;
+    }
+
+    .collapsible-trigger:hover {
+        background: #f1f5f9;
+    }
+
+    .collapsible-trigger h4 {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--sidebar-bg);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .collapsible-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        background: white;
+    }
+
+    .collapsible-content.active {
+        max-height: 500px; /* Adjust based on expected row count */
+        overflow-y: auto;
+    }
+
+    .inner-bom-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .inner-bom-table th {
+        background: #f3f4f6;
+        padding: 10px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-main);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .inner-bom-table td {
+        padding: 8px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .inner-bom-table input {
+        width: 100%;
+        padding: 6px;
+        border: 1px solid transparent;
+        font-size: 12px;
+        border-radius: 4px;
+    }
+
+    .inner-bom-table input:focus {
+        border-color: var(--brand-primary);
+        background: white;
+        outline: none;
+    }
+
+    .toggle-icon {
+        transition: transform 0.3s;
+        color: var(--text-muted);
+    }
+
+    .active .toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .inner-bom-table button:hover {
+        opacity: 0.8;
+        transform: scale(1.1);
+        transition: transform 0.1s;
+    }
+
+    .row-total {
+        padding-right: 10px !important;
+    }
+
     /* --- Responsive --- */
     @media (max-width: 768px) {
         .sidebar { width: 70px; }
         .sidebar-header h2, .nav-item span { display: none; }
         .header { padding: 0 16px; }
     }
+
 </style>
 </head>
 
@@ -340,9 +463,762 @@
                                 style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
                     </div>
 
-                    <div class="modal-footer">
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-shield-alt" style="margin-right: 5px; color: #ef4444;"></i>
+                                SECURITY PRODUCTS (CCTV, BIOMETRICS, DOOR ACCESS, FIREWALL, ANTI-VIRUS, CLOUD SECURITY, & SIEM)
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="security-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">Brand</th>
+                                        <th style="width: 15%;">Model</th>
+                                        <th style="width: 35%;">Description</th>
+                                        <th style="width: 8%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('security-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="security-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="Brand"></td>
+                                        <td><input type="text" placeholder="Model"></td>
+                                        <td><input type="text" placeholder="Description"></td>
+                                        <td><input type="number" value="1" oninput="calculateRow(this, 'security-subtotal')"></td>
+                                        <td><input type="number" value="0" oninput="calculateRow(this, 'security-subtotal')"></td>
+                                        <td class="row-total" style="font-weight: 600; text-align: right;">0.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this)" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="5" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            SECURITY PRODUCTS SUBTOTAL:
+                                        </td>
+                                        <td id="security-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td>                                            
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-network-wired" style="margin-right: 5px; color: #3b82f6;"></i>
+                                NETWORK PRODUCTS (WIRELESS, SWITCHES, ROUTER, & SD-WAN)
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="network-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">Brand</th>
+                                        <th style="width: 15%;">Model</th>
+                                        <th style="width: 35%;">Description</th>
+                                        <th style="width: 8%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('network-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="network-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="Brand"></td>
+                                        <td><input type="text" placeholder="Model"></td>
+                                        <td><input type="text" placeholder="Description"></td>
+                                        <td><input type="number" value="1" oninput="calculateRow(this, 'network-subtotal')"></td>
+                                        <td><input type="number" value="0" oninput="calculateRow(this, 'network-subtotal')"></td>
+                                        <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this, 'network-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="5" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            NETWORK PRODUCTS SUBTOTAL:
+                                        </td>
+                                        <td id="network-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-desktop" style="margin-right: 5px; color: #10b981;"></i>
+                                COMPUTER PRODUCTS (DESKTOPS, LAPTOPS, SERVERS, NAS, CLOUD SYSTEM, & ACCESSORIES)
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="computer-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">Brand</th>
+                                        <th style="width: 15%;">Model</th>
+                                        <th style="width: 35%;">Description</th>
+                                        <th style="width: 8%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('computer-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="computer-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="Brand"></td>
+                                        <td><input type="text" placeholder="Model"></td>
+                                        <td><input type="text" placeholder="Description"></td>
+                                        <td><input type="number" value="1" oninput="calculateRow(this, 'computer-subtotal')"></td>
+                                        <td><input type="number" value="0" oninput="calculateRow(this, 'computer-subtotal')"></td>
+                                        <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this, 'computer-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="5" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            COMPUTER PRODUCTS SUBTOTAL:
+                                        </td>
+                                        <td id="computer-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-phone-alt" style="margin-right: 10px; color: #f59e0b;"></i>
+                                VOICE PRODUCTS (IPPBX, PHONES, GATEWAYS, PA SYSTEM, PAVA, & SOUND SYSTEM)
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="voice-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">Brand</th>
+                                        <th style="width: 15%;">Model</th>
+                                        <th style="width: 35%;">Description</th>
+                                        <th style="width: 8%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('voice-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="voice-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="Brand"></td>
+                                        <td><input type="text" placeholder="Model"></td>
+                                        <td><input type="text" placeholder="Description"></td>
+                                        <td><input type="number" value="1" oninput="calculateRow(this, 'voice-subtotal')"></td>
+                                        <td><input type="number" value="0" oninput="calculateRow(this, 'voice-subtotal')"></td>
+                                        <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this, 'voice-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="5" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            VOICE PRODUCTS SUBTOTAL:
+                                        </td>
+                                        <td id="voice-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-fire" style="margin-right: 10px; color: #f97316;"></i>
+                                FIRE PREVENTION PRODUCTS (FDAS)
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="fire-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">Brand</th>
+                                        <th style="width: 15%;">Model</th>
+                                        <th style="width: 35%;">Description</th>
+                                        <th style="width: 8%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('fire-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fire-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="Brand"></td>
+                                        <td><input type="text" placeholder="Model"></td>
+                                        <td><input type="text" placeholder="Description"></td>
+                                        <td><input type="number" value="1" oninput="calculateRow(this, 'fire-subtotal')"></td>
+                                        <td><input type="number" value="0" oninput="calculateRow(this, 'fire-subtotal')"></td>
+                                        <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this, 'fire-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="5" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            FIRE PREVENTION SUBTOTAL:
+                                        </td>
+                                        <td id="fire-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-bolt" style="margin-right: 10px; color: #eab308;"></i>
+                                POWER SUPPLY PRODUCTS (UPS, AVR, BATTERIES, & POWER SUPPLY)
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="power-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">Brand</th>
+                                        <th style="width: 15%;">Model</th>
+                                        <th style="width: 35%;">Description</th>
+                                        <th style="width: 8%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('power-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="power-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="Brand"></td>
+                                        <td><input type="text" placeholder="Model"></td>
+                                        <td><input type="text" placeholder="Description"></td>
+                                        <td><input type="number" value="1" oninput="calculateRow(this, 'power-subtotal')"></td>
+                                        <td><input type="number" value="0" oninput="calculateRow(this, 'power-subtotal')"></td>
+                                        <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this, 'power-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="5" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            POWER SUPPLY SUBTOTAL:
+                                        </td>
+                                        <td id="power-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-server" style="margin-right: 10px; color: #64748b;"></i>
+                                DATA CONTAINERS (DATA RACKS, BRACKET, & DATA CABINETS WITH ACCESSORIES)
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="cabinet-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 20%;">Brand</th>
+                                        <th style="width: 45%;">Description</th>
+                                        <th style="width: 8%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('cabinet-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cabinet-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="Brand"></td>
+                                        <td><input type="text" placeholder="Description"></td>
+                                        <td><input type="number" value="1" oninput="calculateRow(this, 'cabinet-subtotal')"></td>
+                                        <td><input type="number" value="0" oninput="calculateRow(this, 'cabinet-subtotal')"></td>
+                                        <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this, 'cabinet-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="4" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            DATA CABINETS SUBTOTAL:
+                                        </td>
+                                        <td id="cabinet-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-project-diagram" style="margin-right: 10px; color: #0d9488;"></i>
+                                PASSIVE NETWORK COMPONENTS (OPTICAL FIBER, UTP CABLES, & CONNECTORS)
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="passive-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 20%;">Brand</th>
+                                        <th style="width: 45%;">Description</th>
+                                        <th style="width: 8%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('passive-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="passive-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="Brand"></td>
+                                        <td><input type="text" placeholder="Description"></td>
+                                        <td><input type="number" value="1" oninput="calculateRow(this, 'passive-subtotal')"></td>
+                                        <td><input type="number" value="0" oninput="calculateRow(this, 'passive-subtotal')"></td>
+                                        <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this, 'passive-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="4" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            PASSIVE NETWORK SUBTOTAL:
+                                        </td>
+                                        <td id="passive-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-tools" style="margin-right: 10px; color: #6b7280;"></i>
+                                ROUGH-IN MATERIALS
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="roughin-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 65%;">Description</th>
+                                        <th style="width: 8%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('roughin-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="roughin-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="e.g. 3/4 PVC Pipe, Utility Box, etc."></td>
+                                        <td><input type="number" value="1" oninput="calculateRow(this, 'roughin-subtotal')"></td>
+                                        <td><input type="number" value="0" oninput="calculateRow(this, 'roughin-subtotal')"></td>
+                                        <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this, 'roughin-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #ffffff; border-top: 1px solid #e2e8f0;">
+                                        <td colspan="2" style="text-align: right; padding: 8px 12px; font-size: 11px; color: var(--text-muted); font-weight: 600;">
+                                            CONTINGENCY: 
+                                            <input type="number" id="roughin-contingency-percent" value="0" min="0" oninput="updateSubtotal('roughin-subtotal')" 
+                                                style="width: 50px; padding: 2px 5px; margin-left: 5px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center;"> %
+                                        </td>
+                                        <td style="text-align: right; font-size: 12px; color: var(--text-muted); padding-right: 10px;">
+                                            <span id="roughin-contingency-amount">0.00</span>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="3" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            ROUGH-IN MATERIALS SUBTOTAL (Incl. Contingency):
+                                        </td>
+                                        <td id="roughin-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div> 
+                    </div>
+
+                    <div class="collapsible-wrapper">
+                        <button type="button" class="collapsible-trigger" onclick="toggleTable(this)">
+                            <h4>
+                                <i class="fas fa-desktop" style="margin-right: 5px; color: #3b82f6;"></i>
+                                PER NODE CALCULATION
+                            </h4>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </button>
+                        
+                        <div class="collapsible-content" id="node-table-content">
+                            <table class="inner-bom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">Brand</th>
+                                        <th style="width: 15%;">Model</th>
+                                        <th style="width: 30%;">Qty</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 10%;">Node</th>
+                                        <th style="width: 13%;">Total</th>
+                                        <th style="width: 5%; text-align: center;">
+                                            <button type="button" onclick="addRow('node-items-body')" style="background: var(--brand-primary); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="node-items-body">
+                                    <tr>
+                                        <td><input type="text" placeholder="Brand"></td>
+                                        <td><input type="text" placeholder="Model"></td>
+                                        <td><input type="number" value="1" oninput="calculateNodeRow(this)"></td>
+                                        <td><input type="number" value="0.00" step="0.01"></td>
+                                        <td><input type="number" value="1" oninput="calculateNodeRow(this)"></td>
+                                        <td style="font-weight: 600; text-align: right; padding-right: 10px;">1.00</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" onclick="deleteRow(this, 'node-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #f8fafc; border-top: 2px solid var(--border-color);">
+                                        <td colspan="5" style="text-align: right; font-weight: 700; padding: 12px; font-size: 11px; color: var(--text-muted);">
+                                            PER NODE SUBTOTAL:
+                                        </td>
+                                        <td id="node-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); padding-right: 10px; font-size: 14px;">
+                                            0.00
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 25px; border-top: 2px solid var(--border-color); padding-top: 20px;">
+                        <h4 style="font-size: 12px; font-weight: 700; color: var(--sidebar-bg); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">
+                            <i class="fas fa-hard-hat" style="margin-right: 8px;"></i> LABOR / INSTALLATION / ENGINEERING
+                        </h4>
+                        <table class="inner-bom-table" style="width: 100%;">
+                            <thead>
+                                <tr style="background: #f1f5f9;">
+                                    <th style="width: 50%;">Description</th>
+                                    <th style="width: 25%;">Input</th>
+                                    <th style="width: 25%; text-align: right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Labor Days</td>
+                                    <td><input type="number" id="labor-days" value="0" oninput="calculateLabor()"></td>
+                                    <td style="text-align: right; color: var(--text-muted);">---</td>
+                                </tr>
+                                <tr>
+                                    <td>Labor Rate (Daily)</td>
+                                    <td><input type="number" id="labor-rate" value="700" oninput="calculateLabor()"></td>
+                                    <td style="text-align: right; color: var(--text-muted);">---</td>
+                                </tr>
+                                <tr>
+                                    <td>In-house Installers (Headcount)</td>
+                                    <td><input type="number" id="installers-in" value="0" oninput="calculateLabor()"></td>
+                                    <td style="text-align: right; color: var(--text-muted);">---</td>
+                                </tr>
+                                <tr>
+                                    <td>Outsource Installers (Headcount)</td>
+                                    <td><input type="number" id="installers-out" value="0" oninput="calculateLabor()"></td>
+                                    <td style="text-align: right; color: var(--text-muted);">---</td>
+                                </tr>
+                                <tr>
+                                    <td>Technical Engineers (Headcount)</td>
+                                    <td><input type="number" id="tech-eng" value="0" oninput="calculateLabor()"></td>
+                                    <td style="text-align: right; color: var(--text-muted);">---</td>
+                                </tr>
+                                <tr>
+                                    <td>Permits / Government Fees</td>
+                                    <td><input type="number" id="fees-permits" value="0" oninput="calculateLabor()"></td>
+                                    <td id="display-permits" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Temporary Facility</td>
+                                    <td><input type="number" id="fees-temp" value="0" oninput="calculateLabor()"></td>
+                                    <td id="display-temp" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>FDAS/BFP Permits (%)
+                                        <small style="display:block; font-size:10px; color:var(--text-muted)">(of Fire Prevention Subtotal)</small>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 5px;">
+                                            <input type="number" id="fdas-percent" value="0" oninput="calculateLabor()">
+                                            <span>%</span>
+                                        </div>
+                                    </td>
+                                    <td id="display-fdas-fee" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>As-Built Plan / ECE Fee</td>
+                                    <td><input type="number" id="ece-fee" value="0" oninput="calculateLabor()"></td>
+                                    <td id="display-ece" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>PPE Gear & Safety Equipment</td>
+                                    <td><input type="number" id="ppe-safety" value="0" oninput="calculateLabor()"></td>
+                                    <td id="display-ppe" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Project Design & PM Engineering</td>
+                                    <td><input type="number" id="pm-eng-fee" value="0" oninput="calculateLabor()"></td>
+                                    <td id="display-pm" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Installation & Config Fee (%) 
+                                        <small style="display:block; font-size:10px; color:var(--text-muted)">(of Active Components Subtotals)</small>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 5px;">
+                                            <input type="number" id="config-percent" value="0" oninput="calculateLabor()" style="flex: 1;">
+                                            <span>%</span>
+                                        </div>
+                                    </td>
+                                    <td id="display-config-fee" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Installation & Config Fee from Vendor</td>
+                                    <td><input type="number" id="vendor-config-fee" value="0" oninput="calculateLabor()"></td>
+                                    <td id="display-vendor-fee" style="text-align: right;">0.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: #eff6ff;">
+                                    <td colspan="2" style="text-align: right; font-weight: 700; padding: 12px;">LABOR & ENGINEERING SUBTOTAL:</td>
+                                    <td id="labor-subtotal" style="text-align: right; font-weight: 700; color: var(--brand-primary); font-size: 14px;">0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 25px; border-top: 2px solid var(--border-color); padding-top: 20px;">
+                        <h4 style="font-size: 12px; font-weight: 700; color: var(--sidebar-bg); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">
+                            <i class="fas fa-truck-moving" style="margin-right: 8px;"></i> MOBILIZATION & DEMOBILIZATION
+                        </h4>
+                        <table class="inner-bom-table" style="width: 100%;">
+                            <thead>
+                                <tr style="background: #f8fafc;">
+                                    <th style="width: 50%;">Description</th>
+                                    <th style="width: 25%;">Input (Rate/Qty)</th>
+                                    <th style="width: 25%; text-align: right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Plane Trip - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
+                                    <td><input type="number" id="mobi-plane" value="0" oninput="calculateMobi()"></td>
+                                    <td id="display-plane" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Shipping Trip - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
+                                    <td><input type="number" id="mobi-shipping" value="0" oninput="calculateMobi()"></td>
+                                    <td id="display-shipping" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Land Trip - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
+                                    <td><input type="number" id="mobi-land" value="0" oninput="calculateMobi()"></td>
+                                    <td id="display-land" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr style="background: #f1f5f9;">
+                                    <td><strong>Number of Round Trips</strong></td>
+                                    <td><input type="number" id="mobi-trip-count" value="1" oninput="calculateMobi()"></td>
+                                    <td id="display-trip-totals" style="text-align: right; font-weight: 700;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Meal allowance for Installers</td>
+                                    <td><input type="number" id="mobi-meal-inst" value="0" oninput="calculateMobi()"></td>
+                                    <td id="display-meal-inst" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Accommodation for Installers</td>
+                                    <td><input type="number" id="mobi-acc-inst" placeholder="Per Month" oninput="calculateMobi()"></td>
+                                    <td id="display-acc-inst" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Meal allowance for Tech Eng</td>
+                                    <td><input type="number" id="mobi-meal-eng" value="0" oninput="calculateMobi()"></td>
+                                    <td id="display-meal-eng" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Accommodation for Tech Eng</td>
+                                    <td><input type="number" id="mobi-acc-eng" placeholder="Per Night" oninput="calculateMobi()"></td>
+                                    <td id="display-acc-eng" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Delivery of Materials & Tools Within Cebu Area</td>
+                                    <td><input type="number" id="mobi-del-cebu" value="0" oninput="calculateMobi()"></td>
+                                    <td id="display-del-cebu" style="text-align: right;">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Delivery of Materials & Tools Outside Cebu Area</td>
+                                    <td><input type="number" id="mobi-del-outside" value="0" oninput="calculateMobi()"></td>
+                                    <td id="display-del-outside" style="text-align: right;">0.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: #f0fdf4;">
+                                    <td colspan="2" style="text-align: right; font-weight: 700; padding: 12px;">MOBILIZATION SUBTOTAL:</td>
+                                    <td id="mobi-subtotal" style="text-align: right; font-weight: 700; color: #16a34a; font-size: 14px;">0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 30px; background: var(--sidebar-bg); color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9;">Project Grand Total</h3>
+                                <p style="margin: 5px 0 0 0; font-size: 11px; opacity: 0.7;">Inclusive of Hardware, Nodes, Labor, and Mobilization</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <span id="grand-total-display" style="font-size: 24px; font-weight: 800; color: #fbbf24;">0.00</span>
+                                <span style="display: block; font-size: 10px; opacity: 0.8; margin-top: 2px;">PHP (Estimated)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
                         <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-                        <button type="submit" style="padding: 8px 16px; background: var(--brand-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Save BOM</button>
+                        <button type="submit" class="btn-primary" style="background: var(--brand-primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Save BOM</button>
                     </div>
                 </form>
             </div>
@@ -417,8 +1293,65 @@
         }
 
         function closeModal() {
-            document.getElementById('bomModal').style.display = 'none';
-            document.getElementById('bomForm').reset();
+            const clientName = document.getElementById('clientName').value.trim();
+            const description = document.getElementById('bomDescription').value.trim();
+            
+            // 1. Check if text fields are filled
+            const hasTextData = clientName !== "" || description !== "";
+
+            // 2. Check ALL subtotals automatically
+            // This looks for every ID that ends in "-subtotal"
+            const subtotalElements = document.querySelectorAll('[id$="-subtotal"]');
+            let hasFinancialData = false;
+
+            subtotalElements.forEach(el => {
+                const val = parseFloat(el.innerText.replace(/,/g, '')) || 0;
+                if (val > 0) {
+                    hasFinancialData = true;
+                }
+            });
+
+            // 3. Trigger confirmation if any data exists
+            if (hasTextData || hasFinancialData) {
+                const confirmDiscard = confirm("You have unsaved changes across your BOM tables. Are you sure you want to discard them?");
+                if (!confirmDiscard) return; 
+            }
+
+            forceResetAndClose();
+        }
+
+        function forceResetAndClose() {
+            const modal = document.getElementById('bomModal');
+            const form = document.getElementById('bomForm');
+            const grandTotal = document.getElementById('grand-total-display');
+            if (grandTotal) grandTotal.innerText = '0.00';
+            
+            modal.style.display = 'none';
+            
+            if (form) form.reset();
+
+            const bodies = document.querySelectorAll('[id$="-items-body"]');
+            bodies.forEach(body => {
+                body.innerHTML = '';
+                addRow(body.id); 
+            });
+
+            const allNumberInputs = document.querySelectorAll('#bomModal input[type="number"]');
+            allNumberInputs.forEach(input => {
+                input.value = (input.id === 'labor-rate') ? 700 : 0;
+            });
+
+            const allDisplays = document.querySelectorAll('[id$="-subtotal"], [id^="display-"]');
+            allDisplays.forEach(el => {
+                el.innerText = '0.00';
+            });
+
+            document.querySelectorAll('.collapsible-content').forEach(content => {
+                content.style.maxHeight = null;
+                if (content.parentElement) {
+                    content.parentElement.classList.remove('active');
+                }
+            });
         }
 
         async function generateNextBomId() {
@@ -436,6 +1369,349 @@
         window.onclick = function(event) {
             const modal = document.getElementById('bomModal');
             if (event.target == modal) closeModal();
+        }
+
+        // Toggle Collapsible Table
+        function toggleTable(btn) {
+            const content = btn.nextElementSibling;
+            btn.parentElement.classList.toggle('active');
+            
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            }
+        }
+
+        // Function to add a new row
+       function addRow(tbodyId) {
+            const tbody = document.getElementById(tbodyId);
+            const subtotalId = tbodyId.replace('-items-body', '-subtotal');
+            const newRow = document.createElement('tr');
+            
+            if (tbodyId === 'roughin-items-body') {
+                // 4-Column Layout (Rough-In)
+                newRow.innerHTML = `
+                    <td><input type="text" placeholder="Description"></td>
+                    <td><input type="number" value="1" oninput="calculateRow(this, '${subtotalId}')"></td>
+                    <td><input type="number" value="0" oninput="calculateRow(this, '${subtotalId}')"></td>
+                    <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                    <td style="text-align: center;">
+                        <button type="button" onclick="deleteRow(this, '${subtotalId}')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+            } else if (tbodyId === 'cabinet-items-body' || tbodyId === 'passive-items-body') {
+                // 5-Column Layout (Cabinets & Passive)
+                newRow.innerHTML = `
+                    <td><input type="text" placeholder="Brand"></td>
+                    <td><input type="text" placeholder="Description"></td>
+                    <td><input type="number" value="1" oninput="calculateRow(this, '${subtotalId}')"></td>
+                    <td><input type="number" value="0" oninput="calculateRow(this, '${subtotalId}')"></td>
+                    <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                    <td style="text-align: center;">
+                        <button type="button" onclick="deleteRow(this, '${subtotalId}')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+            } else if (tbodyId === 'node-items-body') {
+                newRow.innerHTML = `
+                    <td><input type="text" placeholder="Brand"></td>
+                    <td><input type="text" placeholder="Model"></td>
+                    <td><input type="number" value="1" oninput="calculateNodeRow(this)"></td>
+                    <td><input type="number" value="0.00" step="0.01"></td>
+                    <td><input type="number" value="1" oninput="calculateNodeRow(this)"></td>
+                    <td style="font-weight: 600; text-align: right; padding-right: 10px;">1.00</td>
+                    <td style="text-align: center;">
+                        <button type="button" onclick="deleteRow(this, 'node-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+            } else {
+                // Standard 6-Column Layout (Security, Network, Computer, Voice, Fire, Power)
+                newRow.innerHTML = `
+                    <td><input type="text" placeholder="Brand"></td>
+                    <td><input type="text" placeholder="Model"></td>
+                    <td><input type="text" placeholder="Description"></td>
+                    <td><input type="number" value="1" oninput="calculateRow(this, '${subtotalId}')"></td>
+                    <td><input type="number" value="0" oninput="calculateRow(this, '${subtotalId}')"></td>
+                    <td style="font-weight: 600; text-align: right; padding-right: 10px;">0.00</td>
+                    <td style="text-align: center;">
+                        <button type="button" onclick="deleteRow(this, '${subtotalId}')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+            }
+            
+            tbody.appendChild(newRow);
+            refreshMaxHeight(tbody);
+        }
+
+        // Function to delete a row
+        function deleteRow(btn, subtotalId) {
+            const row = btn.closest('tr');
+            const tbody = row.parentElement;
+            
+            if (tbody.rows.length > 1) {
+                row.remove();
+                updateSubtotal(subtotalId);
+                refreshMaxHeight(tbody);
+            } else {
+                alert("At least one row is required.");
+            }
+        }
+
+        // Simple calculation for row totals
+        function calculateRow(input, subtotalId) {
+            const row = input.closest('tr');
+            
+            const inputs = row.querySelectorAll('input[type="number"]');
+            
+            const qty = parseFloat(inputs[0].value) || 0;
+            const price = parseFloat(inputs[1].value) || 0;
+            
+            const totalCell = row.cells[row.cells.length - 2];
+            
+            const total = qty * price;
+            totalCell.innerText = total.toLocaleString(undefined, {
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2
+            });
+            
+            updateSubtotal(subtotalId);
+        }
+
+        // Sum all rows in the security table
+        function updateSubtotal(subtotalId) {
+            const tbodyId = subtotalId.replace('-subtotal', '-items-body');
+            const rows = document.querySelectorAll(`#${tbodyId} tr`);
+            let itemsSum = 0;
+
+            // 1. Sum up all rows in this table
+            rows.forEach(row => {
+                const totalCell = row.cells[row.cells.length - 2]; // Second to last cell
+                const val = parseFloat(totalCell.innerText.replace(/,/g, '')) || 0;
+                itemsSum += val;
+            });
+
+            // 2. Handle Rough-In Contingency Logic
+            if (subtotalId === 'roughin-subtotal') {
+                const percentInput = document.getElementById('roughin-contingency-percent');
+                const amountDisplay = document.getElementById('roughin-contingency-amount');
+                
+                const percentage = parseFloat(percentInput.value) || 0;
+                const contingencyAmount = itemsSum * (percentage / 100);
+                
+                // Display the calculated percentage amount
+                amountDisplay.innerText = contingencyAmount.toLocaleString(undefined, {
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2
+                });
+
+                // Add contingency to the final subtotal
+                itemsSum += contingencyAmount;
+            }
+
+            // 3. Update the final subtotal display
+            document.getElementById(subtotalId).innerText = itemsSum.toLocaleString(undefined, {
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2
+            });
+        }
+
+        function refreshMaxHeight(element) {
+            const content = element.closest('.collapsible-content');
+            if (content && content.style.maxHeight) {
+                content.style.maxHeight = content.scrollHeight + "px";
+            }
+        }
+
+        function calculateNodeRow(input) {
+            const row = input.closest('tr');
+            const inputs = row.querySelectorAll('input[type="number"]');
+            
+            // index 0 = Qty
+            // index 1 = Price (Skipped)
+            // index 2 = Node
+            const qty = parseFloat(inputs[0].value) || 0;
+            const node = parseFloat(inputs[2].value) || 0;
+            
+            // Total calculation: Qty * Node
+            const total = qty * node;
+            
+            // Update the row total cell (6th cell)
+            const totalCell = row.cells[5]; 
+            totalCell.innerText = total.toLocaleString(undefined, {
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2
+            });
+            
+            // Update the overall table subtotal
+            updateSubtotal('node-subtotal');
+        }
+
+        function calculateLabor() {
+            const getSubtotal = (id) => {
+                const el = document.getElementById(id);
+                return el ? parseFloat(el.innerText.replace(/,/g, '')) || 0 : 0;
+            };
+
+            const days = parseFloat(document.getElementById('labor-days').value) || 0;
+            const rate = parseFloat(document.getElementById('labor-rate').value) || 0;
+            
+            const inHouse = parseFloat(document.getElementById('installers-in').value) || 0;
+            const outsource = parseFloat(document.getElementById('installers-out').value) || 0;
+            
+            // Technical Eng is retrieved but NOT added to this sum
+            const techEng = parseFloat(document.getElementById('tech-eng').value) || 0;
+
+            // Only multiply the actual installers by rate and days
+            const basicLaborTotal = (inHouse + outsource) * rate * days;
+
+            const permits = parseFloat(document.getElementById('fees-permits').value) || 0;
+            const tempFac = parseFloat(document.getElementById('fees-temp').value) || 0;
+            const eceFee = parseFloat(document.getElementById('ece-fee').value) || 0;
+            const ppeSafety = parseFloat(document.getElementById('ppe-safety').value) || 0;
+            const pmEng = parseFloat(document.getElementById('pm-eng-fee').value) || 0;
+            const vendorFee = parseFloat(document.getElementById('vendor-config-fee').value) || 0;
+
+            // 3. Percentage Calculations
+            const fireSubtotal = getSubtotal('fire-subtotal');
+            const fdasPercent = parseFloat(document.getElementById('fdas-percent').value) || 0;
+            const fdasAmount = fireSubtotal * (fdasPercent / 100);
+
+            const productTotal = getSubtotal('security-subtotal') + 
+                                getSubtotal('network-subtotal') + 
+                                getSubtotal('computer-subtotal') + 
+                                getSubtotal('voice-subtotal') + 
+                                getSubtotal('fire-subtotal') + 
+                                getSubtotal('power-subtotal') +
+                                getSubtotal('node-subtotal');
+            
+            const configPercent = parseFloat(document.getElementById('config-percent').value) || 0;
+            const configAmount = productTotal * (configPercent / 100);
+
+            document.getElementById('display-permits').innerText = permits.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('display-temp').innerText = tempFac.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('display-ppe').innerText = ppeSafety.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('display-fdas-fee').innerText = fdasAmount.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('display-ece').innerText = eceFee.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('display-pm').innerText = pmEng.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('display-config-fee').innerText = configAmount.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('display-vendor-fee').innerText = vendorFee.toLocaleString(undefined, {minimumFractionDigits: 2});
+
+            const finalLaborSubtotal = basicLaborTotal + permits + tempFac + fdasAmount + eceFee + ppeSafety + pmEng + configAmount + vendorFee;
+    
+            document.getElementById('labor-subtotal').innerText = finalLaborSubtotal.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            if (typeof calculateMobi === "function") calculateMobi();
+            updateGrandTotal();
+        }
+
+        function calculateMobi() {
+            // 1. Get references from Labor Table
+            const days = parseFloat(document.getElementById('labor-days').value) || 0;
+            const inHouse = parseFloat(document.getElementById('installers-in').value) || 0;
+            const outsource = parseFloat(document.getElementById('installers-out').value) || 0;
+            const techEng = parseFloat(document.getElementById('tech-eng').value) || 0;
+            
+            const totalStaff = inHouse + outsource + techEng;
+            const totalInstallers = inHouse + outsource;
+
+            // 2. Trips Calculation (Rate * Total Staff)
+            const planeRate = parseFloat(document.getElementById('mobi-plane').value) || 0;
+            const shipRate = parseFloat(document.getElementById('mobi-shipping').value) || 0;
+            const landRate = parseFloat(document.getElementById('mobi-land').value) || 0;
+            const tripCount = parseFloat(document.getElementById('mobi-trip-count').value) || 0;
+
+            const planeAmount = planeRate * totalStaff;
+            const shipAmount = shipRate * totalStaff;
+            const landAmount = landRate * totalStaff;
+            
+            // Total for all trips multiplied by number of round trips
+            const totalTripAmount = (planeAmount + shipAmount + landAmount) * tripCount;
+
+            // 3. Allowances & Deliveries
+            // Installers: (Headcount * Rate) * Days
+            const mealRateInst = parseFloat(document.getElementById('mobi-meal-inst').value) || 0;
+            const mealAmountInst = (totalInstallers * mealRateInst) * days;
+            
+            // Tech Eng: (Headcount * Rate) * Days
+            const mealRateEng = parseFloat(document.getElementById('mobi-meal-eng').value) || 0;
+            const mealAmountEng = (techEng * mealRateEng) * days;
+
+            // Accommodations (Direct Input)
+            const accAmountInst = parseFloat(document.getElementById('mobi-acc-inst').value) || 0;
+            const accAmountEng = parseFloat(document.getElementById('mobi-acc-eng').value) || 0;
+
+            // Deliveries
+            const delCebu = parseFloat(document.getElementById('mobi-del-cebu').value) || 0;
+            const delOutside = parseFloat(document.getElementById('mobi-del-outside').value) || 0;
+
+            // 4. Update UI Displays
+            const format = (val) => val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            document.getElementById('display-plane').innerText = format(planeAmount);
+            document.getElementById('display-shipping').innerText = format(shipAmount);
+            document.getElementById('display-land').innerText = format(landAmount);
+            document.getElementById('display-trip-totals').innerText = format(totalTripAmount);
+            document.getElementById('display-meal-inst').innerText = format(mealAmountInst);
+            document.getElementById('display-acc-inst').innerText = format(accAmountInst);
+            document.getElementById('display-meal-eng').innerText = format(mealAmountEng);
+            document.getElementById('display-acc-eng').innerText = format(accAmountEng);
+            document.getElementById('display-del-cebu').innerText = format(delCebu);
+            document.getElementById('display-del-outside').innerText = format(delOutside);
+
+            // 5. Final Mobi Subtotal
+            const finalMobiSubtotal = totalTripAmount + mealAmountInst + accAmountInst + mealAmountEng + accAmountEng + delCebu + delOutside;
+            
+            document.getElementById('mobi-subtotal').innerText = format(finalMobiSubtotal);
+
+            updateGrandTotal();
+        }
+
+        function updateGrandTotal() {
+            const getVal = (id) => {
+                const el = document.getElementById(id);
+                return el ? parseFloat(el.innerText.replace(/,/g, '')) || 0 : 0;
+            };
+
+            // 1. Hardware & Components
+            const hardware = getVal('security-subtotal') + 
+                            getVal('network-subtotal') + 
+                            getVal('computer-subtotal') + 
+                            getVal('voice-subtotal') + 
+                            getVal('fire-subtotal') + 
+                            getVal('power-subtotal') +
+                            getVal('rough-subtotal');
+
+            // 2. Specialized Calculations
+            const nodes = getVal('node-subtotal');
+
+            // 3. Labor & Mobilization
+            const labor = getVal('labor-subtotal');
+            const mobi = getVal('mobi-subtotal');
+
+            // Sum everything
+            const grandTotal = hardware + nodes + labor + mobi;
+
+            // Update Display
+            const display = document.getElementById('grand-total-display');
+            if (display) {
+                display.innerText = grandTotal.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            updateGrandTotal();
         }
 
         // --- FORM SUBMISSION ---
