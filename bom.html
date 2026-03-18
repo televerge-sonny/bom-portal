@@ -1156,17 +1156,17 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>Plane Trip - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
+                                    <td>Plane Transpo Fee - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
                                     <td><input type="number" id="mobi-plane" value="0" oninput="calculateMobi()"></td>
                                     <td id="display-plane" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
-                                    <td>Shipping Trip - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
+                                    <td>Ship Transpo Fee - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
                                     <td><input type="number" id="mobi-shipping" value="0" oninput="calculateMobi()"></td>
                                     <td id="display-shipping" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
-                                    <td>Land Trip - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
+                                    <td>Land Transpo Fee - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
                                     <td><input type="number" id="mobi-land" value="0" oninput="calculateMobi()"></td>
                                     <td id="display-land" style="text-align: right;">0.00</td>
                                 </tr>
@@ -1381,18 +1381,14 @@
 
         async function generateNextBomId() {
             try {
-                // 1. Fetch the total count of records directly from your Supabase table
-                // 'head: true' means we only want the count, not the actual data (faster)
+                // Fetch the total count of records directly from your Supabase table
                 const { count, error } = await _supabase
                     .from('bom_records') 
                     .select('*', { count: 'exact', head: true });
 
                 if (error) throw error;
 
-                // 2. If the table is empty, count will be 0. We add 1 to get the next ID.
                 const nextNumber = (count || 0) + 1;
-
-                // 3. Format to 4 digits (e.g., 0001, 0002)
                 const formattedNumber = nextNumber.toString().padStart(4, '0');
 
                 return `BOM${formattedNumber}`;
@@ -1759,11 +1755,78 @@
 
         }
 
+        async function saveBOMtoSupabase() {
+            const nextId = await generateNextBomId();
+            
+            // Capture all the specific Labor/Mobi inputs from your HTML
+            const laborMobiData = {
+                labor: {
+                    days: parseInt(document.getElementById('labor-days').value),
+                    rate: parseFloat(document.getElementById('labor-rate').value),
+                    headcount: {
+                        in_house: parseInt(document.getElementById('installers-in').value),
+                        outsource: parseInt(document.getElementById('installers-out').value),
+                        engineers: parseInt(document.getElementById('tech-eng').value)
+                    },
+                    fees: {
+                        permits: parseFloat(document.getElementById('fees-permits').value),
+                        temp_facility: parseFloat(document.getElementById('fees-temp').value),
+                        ece_fee: parseFloat(document.getElementById('ece-fee').value),
+                        ppe_safety: parseFloat(document.getElementById('ppe-safety').value)
+                    }
+                },
+                mobi: {
+                    trips: {
+                        plane: parseFloat(document.getElementById('mobi-plane').value),
+                        shipping: parseFloat(document.getElementById('mobi-shipping').value),
+                        land: parseFloat(document.getElementById('mobi-land').value),
+                        count: parseInt(document.getElementById('mobi-trip-count').value)
+                    },
+                    allowances: {
+                        meal_inst: parseFloat(document.getElementById('mobi-meal-inst').value),
+                        acc_inst: parseFloat(document.getElementById('mobi-acc-inst').value),
+                        meal_eng: parseFloat(document.getElementById('mobi-meal-eng').value)
+                    }
+                }
+            };
+
+            const { data, error } = await _supabase
+                .from('bom_records')
+                .insert([{
+                    bom_id: nextId,
+                    client_name: document.getElementById('client-name').value, 
+                    description: document.getElementById('project-description').value,
+                    grand_total: parseFloat(document.getElementById('grand-total-display').innerText),
+                    labor_mobi_details: laborMobiData
+                }]);
+
+            if (error) {
+                console.error("Save failed:", error.message);
+                alert("Error: " + error.message);
+            } else {
+                alert("BOM " + nextId + " saved successfully!");
+                window.location.reload();
+            }
+        }
+        
         // --- FORM SUBMISSION ---
-        document.getElementById('bomForm').onsubmit = function(e) {
-            e.preventDefault();
-            alert("BOM saved (Placeholder)");
-            closeModal();
+        document.getElementById('bomForm').onsubmit = async function(e) {
+            e.preventDefault(); 
+
+            const saveBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = saveBtn.innerText;
+            saveBtn.innerText = "Saving to Supabase...";
+            saveBtn.disabled = true;
+
+            try {
+                await saveBOMtoSupabase(); 
+                closeModal();
+            } catch (error) {
+                alert("Critical Error: " + error.message);
+            } finally {
+                saveBtn.innerText = originalText;
+                saveBtn.disabled = false;
+            }
         };
 
         window.onload = () => {
