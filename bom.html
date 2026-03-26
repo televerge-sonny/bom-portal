@@ -1182,20 +1182,25 @@
                                 </tr>
                                 <tr>
                                     <td>Accommodation for Installers</td>
-                                    <td><input type="number" id="mobi-acc-inst" placeholder="Per Month" oninput="calculateMobi()"></td>
+                                    <td><input type="number" id="mobi-acc-inst" placeholder="Per Day/Week/Month" oninput="calculateMobi()"></td>
                                     <td id="display-acc-inst" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Meal allowance for Tech Eng</td>
-                                    <td><input type="number" id="mobi-meal-eng" value="0" oninput="calculateMobi()"></td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <input type="number" id="mobi-meal-eng-days" placeholder="Days" style="width: 50%;" oninput="calculateMobi()">
+                                            <input type="number" id="mobi-meal-eng-rate" placeholder="Per Dime" style="width: 50%;" oninput="calculateMobi()">
+                                        </div>
+                                    </td>
                                     <td id="display-meal-eng" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Accommodation for Tech Eng</td>
                                     <td>
                                         <div style="display: flex; gap: 5px;">
-                                            <input type="number" id="mobi-acc-eng-days" placeholder="Days" style="width: 50%;" oninput="calculateMobi()">
-                                            <input type="number" id="mobi-acc-eng-rate" placeholder="Per Night" style="width: 50%;" oninput="calculateMobi()">
+                                            <input type="number" id="mobi-acc-eng-days" placeholder="Days/Months" style="width: 50%;" oninput="calculateMobi()">
+                                            <input type="number" id="mobi-acc-eng-rate" placeholder="Rate" style="width: 50%;" oninput="calculateMobi()">
                                         </div>
                                     </td>
                                     <td id="display-acc-eng" style="text-align: right;">0.00</td>
@@ -1694,16 +1699,16 @@
         }
 
         function calculateMobi() {
-            // 1. Get references from Labor Table
+            // Defined in your Labor Table
             const days = parseFloat(document.getElementById('labor-days').value) || 0;
             const inHouse = parseFloat(document.getElementById('installers-in').value) || 0;
             const outsource = parseFloat(document.getElementById('installers-out').value) || 0;
-            const techEng = parseFloat(document.getElementById('tech-eng').value) || 0;
+            const techEng = parseFloat(document.getElementById('tech-eng').value) || 0; // Headcount for Engineers
             
             const totalStaff = inHouse + outsource + techEng;
             const totalInstallers = inHouse + outsource;
 
-            // 2. Trips Calculation (Rate * Total Staff)
+            // Rate * Total Staff * Trip Count
             const planeRate = parseFloat(document.getElementById('mobi-plane').value) || 0;
             const shipRate = parseFloat(document.getElementById('mobi-shipping').value) || 0;
             const landRate = parseFloat(document.getElementById('mobi-land').value) || 0;
@@ -1712,31 +1717,29 @@
             const planeAmount = planeRate * totalStaff;
             const shipAmount = shipRate * totalStaff;
             const landAmount = landRate * totalStaff;
-            
-            // Total for all trips multiplied by number of round trips
             const totalTripAmount = (planeAmount + shipAmount + landAmount) * tripCount;
 
-            // 3. Allowances & Deliveries
+            // Allowances & Deliveries            
             // Installers: (Headcount * Rate) * Days
             const mealRateInst = parseFloat(document.getElementById('mobi-meal-inst').value) || 0;
             const mealAmountInst = (totalInstallers * mealRateInst) * days;
-            
-            // Tech Eng: (Headcount * Rate) * Days
-            const mealRateEng = parseFloat(document.getElementById('mobi-meal-eng').value) || 0;
-            const mealAmountEng = (techEng * mealRateEng) * days;
+            const accAmountInst = parseFloat(document.getElementById('mobi-acc-inst')?.value) || 0;
 
-            // Accommodations (Direct Input)
-            const accAmountInst = parseFloat(document.getElementById('mobi-acc-inst').value) || 0;
+            // Tech Eng Meal Allowance (Days * Rate * TechEng Headcount)
+            const mealDaysEng = parseFloat(document.getElementById('mobi-meal-eng-days').value) || 0;
+            const mealRateEng = parseFloat(document.getElementById('mobi-meal-eng-rate').value) || 0;
+            const mealAmountEng = mealDaysEng * mealRateEng * techEng; 
+
+            // Tech Eng Accommodations (Days * Rate * TechEng Headcount)
             const accDaysEng = parseFloat(document.getElementById('mobi-acc-eng-days').value) || 0;
             const accRateEng = parseFloat(document.getElementById('mobi-acc-eng-rate').value) || 0;
-            const accAmountEng = accDaysEng * accRateEng;
-            
+            const accAmountEng = accDaysEng * accRateEng; 
 
             // Deliveries
             const delCebu = parseFloat(document.getElementById('mobi-del-cebu').value) || 0;
             const delOutside = parseFloat(document.getElementById('mobi-del-outside').value) || 0;
 
-            // 4. Update UI Displays
+            //Update UI Displays
             const format = (val) => val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
             document.getElementById('display-plane').innerText = format(planeAmount);
@@ -1751,11 +1754,20 @@
             document.getElementById('display-del-outside').innerText = format(delOutside);
 
             // 5. Final Mobi Subtotal
-            const finalMobiSubtotal = totalTripAmount + mealAmountInst + accAmountInst + mealAmountEng + accAmountEng + delCebu + delOutside;
+            const finalMobiSubtotal = totalTripAmount + 
+                                    mealAmountInst + 
+                                    accAmountInst + 
+                                    mealAmountEng +
+                                    accAmountEng + 
+                                    delCebu + 
+                                    delOutside;
             
             document.getElementById('mobi-subtotal').innerText = format(finalMobiSubtotal);
 
-            updateGrandTotal();
+            // 6. Push to Grand Total
+            if (typeof updateGrandTotal === "function") {
+                updateGrandTotal();
+            }
         }
 
         function updateGrandTotal() {
