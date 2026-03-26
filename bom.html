@@ -345,6 +345,27 @@
         transition: transform 0.1s;
     }
 
+    /* --- Labor & Mobilization Specific Styling --- */
+    .input-calculation {
+        background-color: #f3f4f6 !important; /* Light Grey */
+        border: 1px solid #d1d5db !important;
+        font-weight: 600;
+        color: #374151;
+        transition: all 0.2s ease;
+    }
+
+    .input-calculation:focus {
+        background-color: #ffffff !important; /* Turns white when editing */
+        border-color: var(--brand-primary) !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    /* Optional: Make them look slightly different to indicate they are "summary" values */
+    .input-calculation::placeholder {
+        color: #9ca3af;
+    }
+
     .row-total {
         padding-right: 10px !important;
     }
@@ -452,8 +473,19 @@
 
         <div class="modal-overlay" id="bomModal">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="modal-title">Create New BOM</h3>
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #e5e7eb;">
+                    <h3 id="modal-title" style="margin: 0;">Create New BOM</h3>
+                    
+                    <div id="existing-bom-actions" style="display: none; gap: 10px;">
+                        <button type="button" onclick="duplicateCurrentBOM()" 
+                            style="background: #6366f1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            <i class="fas fa-copy"></i> Duplicate
+                        </button>
+                        <button type="button" onclick="deleteCurrentBOM()" 
+                            style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
                 </div>
                 
                 <form id="bomForm">
@@ -1054,37 +1086,37 @@
                             <tbody>
                                 <tr>
                                     <td>Labor Days</td>
-                                    <td><input type="number" id="labor-days" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="labor-days" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td style="text-align: right; color: var(--text-muted);">---</td>
                                 </tr>
                                 <tr>
                                     <td>Labor Rate (Daily)</td>
-                                    <td><input type="number" id="labor-rate" value="700" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="labor-rate" class="input-calculation" value="700" oninput="calculateLabor()"></td>
                                     <td style="text-align: right; color: var(--text-muted);">---</td>
                                 </tr>
                                 <tr>
                                     <td>In-house Installers (Headcount)</td>
-                                    <td><input type="number" id="installers-in" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="installers-in" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td style="text-align: right; color: var(--text-muted);">---</td>
                                 </tr>
                                 <tr>
                                     <td>Outsource Installers (Headcount)</td>
-                                    <td><input type="number" id="installers-out" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="installers-out" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td style="text-align: right; color: var(--text-muted);">---</td>
                                 </tr>
                                 <tr>
                                     <td>Technical Engineers (Headcount)</td>
-                                    <td><input type="number" id="tech-eng" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="tech-eng" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td style="text-align: right; color: var(--text-muted);">---</td>
                                 </tr>
                                 <tr>
                                     <td>Permits / Government Fees</td>
-                                    <td><input type="number" id="fees-permits" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="fees-permits" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td id="display-permits" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Temporary Facility</td>
-                                    <td><input type="number" id="fees-temp" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="fees-temp" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td id="display-temp" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
@@ -1093,7 +1125,7 @@
                                     </td>
                                     <td>
                                         <div style="display: flex; align-items: center; gap: 5px;">
-                                            <input type="number" id="fdas-percent" value="0" oninput="calculateLabor()">
+                                            <input type="number" id="fdas-percent" class="input-calculation" value="0" oninput="calculateLabor()">
                                             <span>%</span>
                                         </div>
                                     </td>
@@ -1101,17 +1133,17 @@
                                 </tr>
                                 <tr>
                                     <td>As-Built Plan / ECE Fee</td>
-                                    <td><input type="number" id="ece-fee" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="ece-fee" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td id="display-ece" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>PPE Gear & Safety Equipment</td>
-                                    <td><input type="number" id="ppe-safety" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="ppe-safety" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td id="display-ppe" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Project Design & PM Engineering</td>
-                                    <td><input type="number" id="pm-eng-fee" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="pm-eng-fee" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td id="display-pm" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
@@ -1121,7 +1153,7 @@
                                     </td>
                                     <td>
                                         <div style="display: flex; align-items: center; gap: 5px;">
-                                            <input type="number" id="config-percent" value="0" oninput="calculateLabor()" style="flex: 1;">
+                                            <input type="number" id="config-percent" class="input-calculation" value="0" oninput="calculateLabor()" style="flex: 1;">
                                             <span>%</span>
                                         </div>
                                     </td>
@@ -1129,7 +1161,7 @@
                                 </tr>
                                 <tr>
                                     <td>Installation & Config Fee from Vendor</td>
-                                    <td><input type="number" id="vendor-config-fee" value="0" oninput="calculateLabor()"></td>
+                                    <td><input type="number" id="vendor-config-fee" class="input-calculation" value="0" oninput="calculateLabor()"></td>
                                     <td id="display-vendor-fee" style="text-align: right;">0.00</td>
                                 </tr>
                             </tbody>
@@ -1157,17 +1189,17 @@
                             <tbody>
                                 <tr>
                                     <td>Plane Transpo Fee - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
-                                    <td><input type="number" id="mobi-plane" value="0" oninput="calculateMobi()"></td>
+                                    <td><input type="number" id="mobi-plane" class="input-calculation" value="0" oninput="calculateMobi()"></td>
                                     <td id="display-plane" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Ship Transpo Fee - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
-                                    <td><input type="number" id="mobi-shipping" value="0" oninput="calculateMobi()"></td>
+                                    <td><input type="number" id="mobi-shipping" class="input-calculation" value="0" oninput="calculateMobi()"></td>
                                     <td id="display-shipping" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Land Transpo Fee - Round Trip<small style="display:block; font-size:10px; color:var(--text-muted)">(Installers & Tech Engineers)</small></td>
-                                    <td><input type="number" id="mobi-land" value="0" oninput="calculateMobi()"></td>
+                                    <td><input type="number" id="mobi-land" class="input-calculation" value="0" oninput="calculateMobi()"></td>
                                     <td id="display-land" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr style="background: #f1f5f9;">
@@ -1177,20 +1209,20 @@
                                 </tr>
                                 <tr>
                                     <td>Meal allowance for Installers</td>
-                                    <td><input type="number" id="mobi-meal-inst" value="0" oninput="calculateMobi()"></td>
+                                    <td><input type="number" id="mobi-meal-inst" class="input-calculation" value="0" oninput="calculateMobi()"></td>
                                     <td id="display-meal-inst" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Accommodation for Installers</td>
-                                    <td><input type="number" id="mobi-acc-inst" placeholder="Per Day/Week/Month" oninput="calculateMobi()"></td>
+                                    <td><input type="number" id="mobi-acc-inst" class="input-calculation" placeholder="Per Day/Week/Month" oninput="calculateMobi()"></td>
                                     <td id="display-acc-inst" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Meal allowance for Tech Eng</td>
                                     <td>
                                         <div style="display: flex; gap: 5px;">
-                                            <input type="number" id="mobi-meal-eng-days" placeholder="Days" style="width: 50%;" oninput="calculateMobi()">
-                                            <input type="number" id="mobi-meal-eng-rate" placeholder="Per Dime" style="width: 50%;" oninput="calculateMobi()">
+                                            <input type="number" id="mobi-meal-eng-days" class="input-calculation" placeholder="Days" style="width: 50%;" oninput="calculateMobi()">
+                                            <input type="number" id="mobi-meal-eng-rate" class="input-calculation" placeholder="Per Dime" style="width: 50%;" oninput="calculateMobi()">
                                         </div>
                                     </td>
                                     <td id="display-meal-eng" style="text-align: right;">0.00</td>
@@ -1199,20 +1231,20 @@
                                     <td>Accommodation for Tech Eng</td>
                                     <td>
                                         <div style="display: flex; gap: 5px;">
-                                            <input type="number" id="mobi-acc-eng-days" placeholder="Days/Months" style="width: 50%;" oninput="calculateMobi()">
-                                            <input type="number" id="mobi-acc-eng-rate" placeholder="Rate" style="width: 50%;" oninput="calculateMobi()">
+                                            <input type="number" id="mobi-acc-eng-days" class="input-calculation" placeholder="Days/Months" style="width: 50%;" oninput="calculateMobi()">
+                                            <input type="number" id="mobi-acc-eng-rate" class="input-calculation" placeholder="Rate" style="width: 50%;" oninput="calculateMobi()">
                                         </div>
                                     </td>
                                     <td id="display-acc-eng" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Delivery of Materials & Tools Within Cebu Area</td>
-                                    <td><input type="number" id="mobi-del-cebu" value="0" oninput="calculateMobi()"></td>
+                                    <td><input type="number" id="mobi-del-cebu" class="input-calculation" value="0" oninput="calculateMobi()"></td>
                                     <td id="display-del-cebu" style="text-align: right;">0.00</td>
                                 </tr>
                                 <tr>
                                     <td>Delivery of Materials & Tools Outside Cebu Area</td>
-                                    <td><input type="number" id="mobi-del-outside" value="0" oninput="calculateMobi()"></td>
+                                    <td><input type="number" id="mobi-del-outside" class="input-calculation" value="0" oninput="calculateMobi()"></td>
                                     <td id="display-del-outside" style="text-align: right;">0.00</td>
                                 </tr>
                             </tbody>
@@ -1292,7 +1324,7 @@
             }
         }
 
-        const IDLE_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
+        const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
         let idleTimer;
 
         function resetIdleTimer() {
@@ -1310,15 +1342,11 @@
         async function loadBOMTable() {
             const { data: boms, error } = await _supabase
                 .from('bom_records')
-                .select(`
-                    *,
-                    profiles:created_by (
-                        first_name
-                    )
-                `)
+                .select('*')
                 .order('created_at', { ascending: false });
 
             const tableBody = document.getElementById('bom-table-body');
+            if (!tableBody) return;
             tableBody.innerHTML = ''; 
 
             if (error || !boms || boms.length === 0) {
@@ -1327,9 +1355,6 @@
             }
 
             boms.forEach(bom => {
-                // --- NAME LOGIC: First Name Only ---
-                const creatorName = bom.profiles ? bom.profiles.first_name : 'System';
-
                 const row = document.createElement('tr');
                 row.style.borderBottom = "1px solid #e5e7eb";
                 row.innerHTML = `
@@ -1342,9 +1367,11 @@
                     </td>
                     <td style="padding: 12px;">${bom.client_name || '---'}</td>
                     <td style="padding: 12px;">${bom.description || '---'}</td>
-                    <td style="padding: 12px;">${creatorName}</td> 
-                    <td style="padding: 12px; font-weight: 600;">
-                        ${bom.grand_total.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                    <td style="padding: 12px; font-size: 0.85em; color: #6b7280;">
+                        ${bom.created_by ? 'User Linked' : 'System'}
+                    </td>
+                    <td style="padding: 12px; font-weight: 600; text-align: right;">
+                        ₱${Number(bom.grand_total || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </td>
                 `;
                 tableBody.appendChild(row);
@@ -1352,14 +1379,192 @@
         }
 
         async function viewBOMDetails(bomId) {
-            console.log("Opening BOM:", bomId);
-            await openModal(); 
-            document.getElementById('bomIdDisplay').value = bomId;
+            console.log("🔍 Fetching data for ID:", bomId);
+            
+            if (typeof openModal === "function") await openModal();
+
+            // 1. Fetch the main BOM record
+            const { data: bom, error: bomError } = await _supabase
+                .from('bom_records')
+                .select('*')
+                .eq('bom_id', bomId)
+                .maybeSingle();
+
+            if (bomError || !bom) {
+                console.error("❌ Header Fetch Failed:", bomError);
+                return;
+            }
+
+            // 2. Fill the Header Fields
+            document.getElementById('bomIdDisplay').value = bom.bom_id || '';
+            document.getElementById('clientName').value = bom.client_name || '';
+            document.getElementById('bomDescription').value = bom.description || '';
+            document.getElementById('modal-title').innerText = `Editing: ${bomId}`;
+            document.getElementById('existing-bom-actions').style.display = 'flex';
+
+            // 3. Fill Labor & Fee Fields from JSONB column
+            // We assume the keys in your JSONB match your HTML IDs
+            const details = bom.labor_mobi_details || {};
+            const laborFieldIds = [
+                'labor-days', 'labor-rate', 'installers-in', 'installers-out', 
+                'tech-eng', 'fees-permits', 'ece-fee'
+            ];
+
+            laborFieldIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    // Pull from JSON object; default to 0 for numbers
+                    el.value = details[id] ?? (el.type === 'number' ? 0 : '');
+                }
+            });
+
+            // 4. Fetch and Categorize Items
+            const { data: items, error: itemsError } = await _supabase
+                .from('bom_items')
+                .select('*')
+                .eq('bom_id', bomId);
+
+            // Add your new categories here so they get cleared/processed
+            const allCategories = ['security', 'network', 'computer', 'voice', 'fire', 'power', 'cabinet', 'passive', 'roughin'];
+
+            if (!itemsError && items) {
+                // Clear all tables
+                allCategories.forEach(cat => {
+                    const body = document.getElementById(`${cat}-items-body`);
+                    if (body) body.innerHTML = '';
+                });
+
+                // Distribute items
+                items.forEach(item => {
+                    const rawCat = (item.category || 'security').toUpperCase().trim();
+                    // Map category label back to the ID prefix (e.g., 'ROUGH-IN' becomes 'roughin')
+                    let catPrefix = rawCat.toLowerCase().replace("-", "").replace(" ", "");
+                    if (rawCat === "PER NODE") catPrefix = "node";
+
+                    const tableBody = document.getElementById(`${catPrefix}-items-body`);
+
+                    if (tableBody) {
+                        const row = document.createElement('tr');
+                        
+                        // DYNAMIC ROW CONTENT based on category
+                        if (rawCat === 'CABINET' || rawCat === 'PASSIVE') {
+                            // Skip the "Model" input to match your save logic
+                            row.innerHTML = `
+                                <td><input type="text" class="item-brand" value="${item.brand || ''}"></td>
+                                <td><input type="text" class="item-desc" value="${item.description || ''}"></td>
+                                <td><input type="number" class="item-qty" value="${item.quantity || 0}" oninput="calculateRow(this, '${catPrefix}-subtotal')"></td>
+                                <td><input type="number" class="item-price" value="${item.unit_price || 0}" oninput="calculateRow(this, '${catPrefix}-subtotal')"></td>
+                                <td class="row-total" style="font-weight: 600; text-align: right;">
+                                    ${Number(item.total_price || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                                </td>
+                                <td style="text-align: center;">
+                                    <button type="button" onclick="deleteRow(this, '${catPrefix}-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            `;
+                        } else if (rawCat === 'ROUGH-IN') {
+                            // Description, Qty, Price only
+                            row.innerHTML = `
+                                <td><input type="text" class="item-desc" value="${item.description || ''}"></td>
+                                <td><input type="number" class="item-qty" value="${item.quantity || 0}" oninput="calculateRow(this, '${catPrefix}-subtotal')"></td>
+                                <td><input type="number" class="item-price" value="${item.unit_price || 0}" oninput="calculateRow(this, '${catPrefix}-subtotal')"></td>
+                                <td class="row-total" style="font-weight: 600; text-align: right;">
+                                    ${Number(item.total_price || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                                </td>
+                                <td style="text-align: center;">
+                                    <button type="button" onclick="deleteRow(this, '${catPrefix}-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            `;
+                        } else {
+                            // STANDARD: Brand, Model, Desc, Qty, Price
+                            row.innerHTML = `
+                                <td><input type="text" class="item-brand" value="${item.brand || ''}"></td>
+                                <td><input type="text" class="item-model" value="${item.model || ''}"></td>
+                                <td><input type="text" class="item-desc" value="${item.description || ''}"></td>
+                                <td><input type="number" class="item-qty" value="${item.quantity || 0}" oninput="calculateRow(this, '${catPrefix}-subtotal')"></td>
+                                <td><input type="number" class="item-price" value="${item.unit_price || 0}" oninput="calculateRow(this, '${catPrefix}-subtotal')"></td>
+                                <td class="row-total" style="font-weight: 600; text-align: right;">
+                                    ${Number(item.total_price || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                                </td>
+                                <td style="text-align: center;">
+                                    <button type="button" onclick="deleteRow(this, '${catPrefix}-subtotal')" style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            `;
+                        }
+                        tableBody.appendChild(row);
+                    }
+                });
+
+                allCategories.forEach(cat => {
+                        if (typeof updateSubtotal === "function") updateSubtotal(`${cat}-subtotal`);
+                });
+            }
+
+            // 5. Final Calculation Refresh
+            // Recalculate everything once data is loaded to ensure UI consistency
+            if (typeof calculateLabor === "function") calculateLabor();
+            
+            ['security-subtotal', 'network-subtotal', 'computer-subtotal', 'voice-subtotal'].forEach(id => {
+                if (typeof updateSubtotal === "function") updateSubtotal(id);
+            });
+            
+            if (typeof updateGrandTotal === "function") updateGrandTotal();
+        }
+
+        async function deleteCurrentBOM() {
+            const bomId = document.getElementById('bomIdDisplay').value;
+            if (!bomId) return;
+            if (!confirm(`Are you sure you want to delete ${bomId}?`)) return;
+
+            // We add .select() at the end to confirm if a row was actually returned (deleted)
+            const { data, error } = await _supabase
+                .from('bom_records')
+                .delete()
+                .eq('bom_id', bomId)
+                .select(); 
+
+            if (error) {
+                console.error("❌ Delete Error:", error);
+                alert("Database Error: " + error.message);
+                return;
+            }
+
+            // If error is null but data is empty, the RLS policy blocked the delete
+            if (!data || data.length === 0) {
+                console.warn("⚠️ No rows deleted. Check your RLS policies.");
+                alert("Permission Denied: You do not have 'admin' privileges to delete this record.");
+                return;
+            }
+
+            alert("BOM Deleted successfully.");
+            
+            // Ensure these functions run to clear the UI
+            if (typeof forceResetAndClose === "function") forceResetAndClose();
+            if (typeof loadBOMTable === "function") await loadBOMTable();
+        }
+
+        async function duplicateCurrentBOM() {
+            const newId = await generateNextBomId();
+            document.getElementById('bomIdDisplay').value = newId;
+            document.getElementById('modal-title').innerText = "Create New BOM (Copy)";
+            document.getElementById('existing-bom-actions').style.display = 'none'; 
+            
+            alert("Copied! Click 'Save' to create this as a new record.");
         }
 
         // --- MODAL LOGIC ---
         async function openModal() {
+            // Reset to Create Mode
+            document.getElementById('modal-title').innerText = "Create New BOM";
+            document.getElementById('existing-bom-actions').style.display = 'none';
+            
             document.getElementById('bomModal').style.display = 'flex';
+            
             const nextId = await generateNextBomId();
             document.getElementById('bomIdDisplay').value = nextId;
         }
@@ -1817,51 +2022,81 @@
         }
 
         async function saveBOMtoSupabase() {
-            const nextId = await generateNextBomId();
+            const isEditMode = document.getElementById('modal-title').innerText.includes("Editing");
+            const currentIdInBox = document.getElementById('bomIdDisplay').value;
+            const finalBomId = isEditMode ? currentIdInBox : await generateNextBomId();
+
             const allItems = []; 
             
+            // Define the column structure for each category
             const categories = [
-                { id: 'security-items-body', label: 'SECURITY' },
-                { id: 'network-items-body', label: 'NETWORK' },
-                { id: 'computer-items-body', label: 'COMPUTER' },
-                { id: 'voice-items-body', label: 'VOICE' },
-                { id: 'fire-items-body', label: 'FIRE' },
-                { id: 'power-items-body', label: 'POWER' },
-                { id: 'cabinet-items-body', label: 'CABINET' },
-                { id: 'passive-items-body', label: 'PASSIVE' },
-                { id: 'roughin-items-body', label: 'ROUGH-IN' }
+                { id: 'security-items-body', label: 'SECURITY', hasModel: true },
+                { id: 'network-items-body', label: 'NETWORK', hasModel: true },
+                { id: 'computer-items-body', label: 'COMPUTER', hasModel: true },
+                { id: 'voice-items-body', label: 'VOICE', hasModel: true },
+                { id: 'fire-items-body', label: 'FIRE', hasModel: true },
+                { id: 'power-items-body', label: 'POWER', hasModel: true },
+                { id: 'cabinet-items-body', label: 'CABINET', hasModel: false },
+                { id: 'passive-items-body', label: 'PASSIVE', hasModel: false },
+                { id: 'roughin-items-body', label: 'ROUGH-IN', isRoughIn: true }
             ];
 
             categories.forEach(cat => {
                 const rows = document.querySelectorAll(`#${cat.id} tr`);
                 rows.forEach(row => {
                     const inputs = row.querySelectorAll('input');
-    
+                    
+                    // Validation: Ensure the first input isn't empty
                     if (inputs[0] && inputs[0].value.trim() !== "") {
-                        const isRoughIn = cat.id === 'roughin-items-body';
-                        
-                        allItems.push({
-                            bom_id: nextId,
+                        let item = {
+                            bom_id: finalBomId,
                             category: cat.label,
-                            brand: isRoughIn ? "N/A" : (inputs[0].value || ""),
-                            description: isRoughIn ? inputs[0].value : (inputs[1]?.value || ""),
-                            quantity: parseFloat(row.querySelector('input[type="number"]:nth-of-type(1)')?.value) || 0,
-                            unit_price: parseFloat(row.querySelector('input[type="number"]:nth-of-type(2)')?.value) || 0,
+                            brand: "",
+                            model: "",
+                            description: "",
+                            quantity: 0,
+                            unit_price: 0,
                             total_price: parseFloat(row.cells[row.cells.length - 2].innerText.replace(/,/g, '')) || 0
-                        });
+                        };
+
+                        if (cat.isRoughIn) {
+                            // Rough-In Structure: [0]Description, [1]Qty, [2]Price
+                            item.brand = "N/A";
+                            item.description = inputs[0].value;
+                            item.quantity = parseFloat(inputs[1].value) || 0;
+                            item.unit_price = parseFloat(inputs[2].value) || 0;
+                        } else if (cat.hasModel) {
+                            // Standard Structure: [0]Brand, [1]Model, [2]Description, [3]Qty, [4]Price
+                            item.brand = inputs[0].value;
+                            item.model = inputs[1].value;
+                            item.description = inputs[2].value;
+                            item.quantity = parseFloat(inputs[3].value) || 0;
+                            item.unit_price = parseFloat(inputs[4].value) || 0;
+                        } else {
+                            // Cabinets/Passive Structure: [0]Brand, [1]Description, [2]Qty, [3]Price
+                            item.brand = inputs[0].value;
+                            item.model = ""; // No model for these
+                            item.description = inputs[1].value;
+                            item.quantity = parseFloat(inputs[2].value) || 0;
+                            item.unit_price = parseFloat(inputs[3].value) || 0;
+                        }
+
+                        allItems.push(item);
                     }
                 });
             });
 
+            // Node items (Calculation remains specific due to multiplier)
             const nodeRows = document.querySelectorAll('#node-items-body tr');
             nodeRows.forEach(row => {
                 const inputs = row.querySelectorAll('input');
                 if (inputs[0] && inputs[0].value.trim() !== "") {
                     allItems.push({
-                        bom_id: nextId,
+                        bom_id: finalBomId,
                         category: 'PER NODE',
                         brand: inputs[0].value,
                         model: inputs[1].value,
+                        description: "Node Components", 
                         quantity: parseFloat(inputs[2].value) || 0,
                         unit_price: parseFloat(inputs[3].value) || 0,
                         total_price: parseFloat(row.cells[5].innerText.replace(/,/g, '')) || 0,
@@ -1879,68 +2114,70 @@
                 fdas_fee: parseFloat(document.getElementById('display-fdas-fee').innerText.replace(/,/g, '')) || 0,
                 config_fee: parseFloat(document.getElementById('display-config-fee').innerText.replace(/,/g, '')) || 0,
                 labor_total: parseFloat(document.getElementById('labor-subtotal').innerText.replace(/,/g, '')) || 0,
-                // Add these to keep the record complete:
                 mobi_total: parseFloat(document.getElementById('mobi-subtotal').innerText.replace(/,/g, '')) || 0
             };
 
             try {
-                // Insert Header
+                // UPSERT Header
                 const { error: headerError } = await _supabase
                     .from('bom_records')
-                    .insert([{
-                        bom_id: nextId,
+                    .upsert([{
+                        bom_id: finalBomId,
                         client_name: document.getElementById('clientName').value.trim(), 
                         description: document.getElementById('bomDescription').value.trim(),
                         grand_total: parseFloat(document.getElementById('grand-total-display').innerText.replace(/,/g, '')) || 0,
                         labor_mobi_details: laborMobiData
-                    }]);
+                    }], { onConflict: 'bom_id' });
 
                 if (headerError) throw headerError;
 
-                // Insert Items if header succeeded
+                // Clear existing items if editing to refresh the list
+                if (isEditMode) {
+                    await _supabase.from('bom_items').delete().eq('bom_id', finalBomId);
+                }
+
                 if (allItems.length > 0) {
                     const { error: itemsError } = await _supabase
                         .from('bom_items')
                         .insert(allItems);
                     
-                    if (itemsError) {
-                        // If items fail, remove the header so we don't have partial data
-                        await _supabase.from('bom_records').delete().eq('bom_id', nextId);
-                        throw itemsError;
-                    }
+                    if (itemsError) throw itemsError;
                 }
                 
-                return nextId; // Success!
+                return finalBomId;
 
             } catch (error) {
-                // Re-throw the error so the .onsubmit handler can catch it and show the alert
+                console.error("Save failed:", error);
                 throw error; 
             }
-
         }
         
         // --- FORM SUBMISSION ---
         document.getElementById('bomForm').onsubmit = async function(e) {
             e.preventDefault();
             
+            const btn = e.submitter;
+            const isEdit = document.getElementById('modal-title').innerText.includes("Editing");
+            
             try {
-                const btn = e.submitter;
                 btn.disabled = true;
-                btn.innerText = "Saving...";
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${isEdit ? 'Updating...' : 'Saving...'}`;
 
-                const newId = await saveBOMtoSupabase();
+                const finalId = await saveBOMtoSupabase();
                 
-                alert(`BOM ${newId} has been created successfully!`);
+                const successMsg = isEdit 
+                    ? `BOM ${finalId} has been updated successfully!` 
+                    : `BOM ${finalId} has been created successfully!`;
+                    
+                alert(successMsg);
 
-                forceResetAndClose(); 
-
+                if (typeof forceResetAndClose === "function") forceResetAndClose(); 
                 await loadBOMTable(); 
 
             } catch (error) {
                 console.error("Save failed:", error);
-                alert("Error saving BOM: " + error.message);
+                alert("Error saving BOM: " + (error.message || "Unknown error occurred"));
             } finally {
-                const btn = e.submitter;
                 btn.disabled = false;
                 btn.innerText = "Save BOM";
             }
@@ -1948,7 +2185,7 @@
 
         window.onload = () => {
             checkAuth(); 
-            fetchUsers();
+            //fetchUsers();
 
             const path = window.location.pathname;
             const pageTitle = document.getElementById("page-title");
