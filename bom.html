@@ -421,7 +421,8 @@
         </header>
 
         <section class="content">
-            <div id="main-content" class="content-card" style="padding: 20px; display: block;"> <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: 16px;">
+            <div id="main-content" class="content-card" style="padding: 20px; display: block;"> 
+                <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: 16px;">
                     <button id="new-bom-btn" onclick="openModal()" style="padding: 8px 16px; background-color: var(--brand-primary); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
                         <i class="fas fa-plus" style="margin-right: 8px;"></i>New BOM
                     </button>
@@ -435,12 +436,11 @@
                             <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">DESCRIPTION</th>
                             <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">CREATED BY</th>
                             <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">GRAND TOTAL</th>
-                            <th style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: center;">ACTION</th>
-                        </tr>
+                            </tr>
                     </thead>
                     <tbody id="bom-table-body">
                         <tr>
-                            <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                            <td colspan="5" style="padding: 40px; text-align: center; color: var(--text-muted);">
                                 <i class="fas fa-folder-open" style="display: block; font-size: 24px; margin-bottom: 8px; opacity: 0.5;"></i>
                                 No BOM records available.
                             </td>
@@ -1261,17 +1261,15 @@
             const { data: profile, error: profileError } = await _supabase
                 .from('profiles')
                 .select('first_name, last_name, role')
-                .eq('id', user.id) // This would crash without the 'return' above
+                .eq('id', user.id)
                 .single();
 
             if (profile && profile.role) {
                 const fullName = `${profile.first_name} ${profile.last_name}`;
                 document.getElementById('displayUserName').innerText = fullName;
                 
-                // This line shows the actual role from the database
                 document.getElementById('displayUserRole').innerText = profile.role; 
             } else {
-                // This is what you are currently seeing
                 document.getElementById('displayUserName').innerText = user.email;
                 document.getElementById('displayUserRole').innerText = "Role Not Set"; 
             }
@@ -1303,6 +1301,49 @@
             window.location.replace('./index.html');
         }
 
+        // Keep this as your main refresh function
+        async function loadBOMTable() {
+            const { data: boms, error } = await _supabase
+                .from('bom_records')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const tableBody = document.getElementById('bom-table-body');
+            tableBody.innerHTML = ''; 
+
+            if (error || !boms || boms.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px;">No records found.</td></tr>`;
+                return;
+            }
+
+            boms.forEach(bom => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = "1px solid #e5e7eb";
+                row.innerHTML = `
+                    <td style="padding: 12px;">
+                        <a href="javascript:void(0)" 
+                        onclick="viewBOMDetails('${bom.bom_id}')" 
+                        style="color: var(--brand-primary); font-weight: 600; text-decoration: none;">
+                        ${bom.bom_id}
+                        </a>
+                    </td>
+                    <td style="padding: 12px;">${bom.client_name || '---'}</td>
+                    <td style="padding: 12px;">${bom.description || '---'}</td>
+                    <td style="padding: 12px;">${bom.created_by || 'System'}</td>
+                    <td style="padding: 12px; font-weight: 600;">
+                        ${bom.grand_total.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function viewBOMDetails(bomId) {
+            console.log("Opening BOM:", bomId);
+            await openModal(); 
+            document.getElementById('bomIdDisplay').value = bomId;
+        }
+
         // --- MODAL LOGIC ---
         async function openModal() {
             document.getElementById('bomModal').style.display = 'flex';
@@ -1310,15 +1351,12 @@
             document.getElementById('bomIdDisplay').value = nextId;
         }
 
-        function closeModal() {
+        function closeModal(isSaveSuccess = false) {
             const clientName = document.getElementById('clientName').value.trim();
             const description = document.getElementById('bomDescription').value.trim();
             
-            // 1. Check if text fields are filled
             const hasTextData = clientName !== "" || description !== "";
 
-            // 2. Check ALL subtotals automatically
-            // This looks for every ID that ends in "-subtotal"
             const subtotalElements = document.querySelectorAll('[id$="-subtotal"]');
             let hasFinancialData = false;
 
@@ -1329,8 +1367,7 @@
                 }
             });
 
-            // 3. Trigger confirmation if any data exists
-            if (hasTextData || hasFinancialData) {
+            if (!isSaveSuccess && (hasTextData || hasFinancialData)) {
                 const confirmDiscard = confirm("You have unsaved changes across your BOM tables. Are you sure you want to discard them?");
                 if (!confirmDiscard) return; 
             }
@@ -1381,20 +1418,24 @@
 
         async function generateNextBomId() {
             try {
-                // Fetch the total count of records directly from your Supabase table
-                const { count, error } = await _supabase
-                    .from('bom_records') 
-                    .select('*', { count: 'exact', head: true });
+                const { data, error } = await _supabase
+                    .from('bom_records')
+                    .select('bom_id')
+                    .order('created_at', { ascending: false }) // Or order by bom_id
+                    .limit(1);
 
                 if (error) throw error;
 
-                const nextNumber = (count || 0) + 1;
-                const formattedNumber = nextNumber.toString().padStart(4, '0');
+                let nextNumber = 1;
+                    if (data && data.length > 0) {
+                        // Extract number from "BOM0005" -> 5
+                        const lastId = data[0].bom_id;
+                        const lastNumber = parseInt(lastId.replace('BOM', ''));
+                        nextNumber = lastNumber + 1;
+                    }
 
-                return `BOM${formattedNumber}`;
-
-            } catch (err) {
-                console.error("Error generating BOM ID:", err);
+                    return `BOM${nextNumber.toString().padStart(4, '0')}`;
+                } catch (err) {
                 
                 // Fallback: If the database is offline, try to count the local table rows
                 const tableBody = document.getElementById('bom-table-body');
@@ -1757,80 +1798,136 @@
 
         async function saveBOMtoSupabase() {
             const nextId = await generateNextBomId();
+            const allItems = []; 
             
-            // Capture all the specific Labor/Mobi inputs from your HTML
-            const laborMobiData = {
-                labor: {
-                    days: parseInt(document.getElementById('labor-days').value),
-                    rate: parseFloat(document.getElementById('labor-rate').value),
-                    headcount: {
-                        in_house: parseInt(document.getElementById('installers-in').value),
-                        outsource: parseInt(document.getElementById('installers-out').value),
-                        engineers: parseInt(document.getElementById('tech-eng').value)
-                    },
-                    fees: {
-                        permits: parseFloat(document.getElementById('fees-permits').value),
-                        temp_facility: parseFloat(document.getElementById('fees-temp').value),
-                        ece_fee: parseFloat(document.getElementById('ece-fee').value),
-                        ppe_safety: parseFloat(document.getElementById('ppe-safety').value)
+            const categories = [
+                { id: 'security-items-body', label: 'SECURITY' },
+                { id: 'network-items-body', label: 'NETWORK' },
+                { id: 'computer-items-body', label: 'COMPUTER' },
+                { id: 'voice-items-body', label: 'VOICE' },
+                { id: 'fire-items-body', label: 'FIRE' },
+                { id: 'power-items-body', label: 'POWER' },
+                { id: 'cabinet-items-body', label: 'CABINET' },
+                { id: 'passive-items-body', label: 'PASSIVE' },
+                { id: 'roughin-items-body', label: 'ROUGH-IN' }
+            ];
+
+            categories.forEach(cat => {
+                const rows = document.querySelectorAll(`#${cat.id} tr`);
+                rows.forEach(row => {
+                    const inputs = row.querySelectorAll('input');
+    
+                    if (inputs[0] && inputs[0].value.trim() !== "") {
+                        const isRoughIn = cat.id === 'roughin-items-body';
+                        
+                        allItems.push({
+                            bom_id: nextId,
+                            category: cat.label,
+                            brand: isRoughIn ? "N/A" : (inputs[0].value || ""),
+                            description: isRoughIn ? inputs[0].value : (inputs[1]?.value || ""),
+                            quantity: parseFloat(row.querySelector('input[type="number"]:nth-of-type(1)')?.value) || 0,
+                            unit_price: parseFloat(row.querySelector('input[type="number"]:nth-of-type(2)')?.value) || 0,
+                            total_price: parseFloat(row.cells[row.cells.length - 2].innerText.replace(/,/g, '')) || 0
+                        });
                     }
-                },
-                mobi: {
-                    trips: {
-                        plane: parseFloat(document.getElementById('mobi-plane').value),
-                        shipping: parseFloat(document.getElementById('mobi-shipping').value),
-                        land: parseFloat(document.getElementById('mobi-land').value),
-                        count: parseInt(document.getElementById('mobi-trip-count').value)
-                    },
-                    allowances: {
-                        meal_inst: parseFloat(document.getElementById('mobi-meal-inst').value),
-                        acc_inst: parseFloat(document.getElementById('mobi-acc-inst').value),
-                        meal_eng: parseFloat(document.getElementById('mobi-meal-eng').value)
-                    }
+                });
+            });
+
+            const nodeRows = document.querySelectorAll('#node-items-body tr');
+            nodeRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                if (inputs[0] && inputs[0].value.trim() !== "") {
+                    allItems.push({
+                        bom_id: nextId,
+                        category: 'PER NODE',
+                        brand: inputs[0].value,
+                        model: inputs[1].value,
+                        quantity: parseFloat(inputs[2].value) || 0,
+                        unit_price: parseFloat(inputs[3].value) || 0,
+                        total_price: parseFloat(row.cells[5].innerText.replace(/,/g, '')) || 0,
+                        metadata: { 
+                            node_multiplier: parseFloat(inputs[4].value) || 1,
+                            is_node_based: true 
+                        }
+                    });
                 }
+            });
+
+            const laborMobiData = { 
+                permits: parseFloat(document.getElementById('display-permits').innerText.replace(/,/g, '')) || 0,
+                ece_fee: parseFloat(document.getElementById('display-ece').innerText.replace(/,/g, '')) || 0,
+                fdas_fee: parseFloat(document.getElementById('display-fdas-fee').innerText.replace(/,/g, '')) || 0,
+                config_fee: parseFloat(document.getElementById('display-config-fee').innerText.replace(/,/g, '')) || 0,
+                labor_total: parseFloat(document.getElementById('labor-subtotal').innerText.replace(/,/g, '')) || 0,
+                // Add these to keep the record complete:
+                mobi_total: parseFloat(document.getElementById('mobi-subtotal').innerText.replace(/,/g, '')) || 0
             };
 
-            const { data, error } = await _supabase
-                .from('bom_records')
-                .insert([{
-                    bom_id: nextId,
-                    client_name: document.getElementById('client-name').value, 
-                    description: document.getElementById('project-description').value,
-                    grand_total: parseFloat(document.getElementById('grand-total-display').innerText),
-                    labor_mobi_details: laborMobiData
-                }]);
+            try {
+                // Insert Header
+                const { error: headerError } = await _supabase
+                    .from('bom_records')
+                    .insert([{
+                        bom_id: nextId,
+                        client_name: document.getElementById('clientName').value.trim(), 
+                        description: document.getElementById('bomDescription').value.trim(),
+                        grand_total: parseFloat(document.getElementById('grand-total-display').innerText.replace(/,/g, '')) || 0,
+                        labor_mobi_details: laborMobiData
+                    }]);
 
-            if (error) {
-                console.error("Save failed:", error.message);
-                alert("Error: " + error.message);
-            } else {
-                alert("BOM " + nextId + " saved successfully!");
-                window.location.reload();
+                if (headerError) throw headerError;
+
+                // Insert Items if header succeeded
+                if (allItems.length > 0) {
+                    const { error: itemsError } = await _supabase
+                        .from('bom_items')
+                        .insert(allItems);
+                    
+                    if (itemsError) {
+                        // If items fail, remove the header so we don't have partial data
+                        await _supabase.from('bom_records').delete().eq('bom_id', nextId);
+                        throw itemsError;
+                    }
+                }
+                
+                return nextId; // Success!
+
+            } catch (error) {
+                // Re-throw the error so the .onsubmit handler can catch it and show the alert
+                throw error; 
             }
+
         }
         
         // --- FORM SUBMISSION ---
         document.getElementById('bomForm').onsubmit = async function(e) {
-            e.preventDefault(); 
-
-            const saveBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = saveBtn.innerText;
-            saveBtn.innerText = "Saving to Supabase...";
-            saveBtn.disabled = true;
-
+            e.preventDefault();
+            
             try {
-                await saveBOMtoSupabase(); 
-                closeModal();
+                const btn = e.submitter;
+                btn.disabled = true;
+                btn.innerText = "Saving...";
+
+                const newId = await saveBOMtoSupabase();
+                
+                alert(`BOM ${newId} has been created successfully!`);
+
+                forceResetAndClose(); 
+
+                await loadBOMTable(); 
+
             } catch (error) {
-                alert("Critical Error: " + error.message);
+                console.error("Save failed:", error);
+                alert("Error saving BOM: " + error.message);
             } finally {
-                saveBtn.innerText = originalText;
-                saveBtn.disabled = false;
+                const btn = e.submitter;
+                btn.disabled = false;
+                btn.innerText = "Save BOM";
             }
         };
 
         window.onload = () => {
-            checkAuth(); // Run security check
+            checkAuth(); 
             fetchUsers();
 
             const path = window.location.pathname;
@@ -1863,6 +1960,9 @@
 
             resetIdleTimer(); // Initialize timer
         };
+   
+        loadBOMTable();   
+        resetIdleTimer();
     </script>
 </body>
 </html>
