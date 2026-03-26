@@ -1310,7 +1310,12 @@
         async function loadBOMTable() {
             const { data: boms, error } = await _supabase
                 .from('bom_records')
-                .select('*')
+                .select(`
+                    *,
+                    profiles:created_by (
+                        first_name
+                    )
+                `)
                 .order('created_at', { ascending: false });
 
             const tableBody = document.getElementById('bom-table-body');
@@ -1322,6 +1327,9 @@
             }
 
             boms.forEach(bom => {
+                // --- NAME LOGIC: First Name Only ---
+                const creatorName = bom.profiles ? bom.profiles.first_name : 'System';
+
                 const row = document.createElement('tr');
                 row.style.borderBottom = "1px solid #e5e7eb";
                 row.innerHTML = `
@@ -1334,7 +1342,7 @@
                     </td>
                     <td style="padding: 12px;">${bom.client_name || '---'}</td>
                     <td style="padding: 12px;">${bom.description || '---'}</td>
-                    <td style="padding: 12px;">${bom.created_by || 'System'}</td>
+                    <td style="padding: 12px;">${creatorName}</td> 
                     <td style="padding: 12px; font-weight: 600;">
                         ${bom.grand_total.toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </td>
