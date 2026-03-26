@@ -1445,7 +1445,7 @@
                 // Fallback: If the database is offline, try to count the local table rows
                 const tableBody = document.getElementById('bom-table-body');
                 const rowCount = tableBody ? tableBody.getElementsByTagName('tr').length : 0;
-                const isTableEmpty = tableBody?.innerHTML.includes("No BOM records available");
+                const isTableEmpty = tableBody?.innerHTML.includes("");
                 
                 const fallbackNum = (isTableEmpty ? 0 : rowCount) + 1;
                 return `BOM${fallbackNum.toString().padStart(4, '0')}`;
